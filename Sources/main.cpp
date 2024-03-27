@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "mandelbrot.h"
+#include "events_handlers.h"
 
 int main(int argc, char* args[])
 {
@@ -32,21 +33,38 @@ int main(int argc, char* args[])
         return 1;
     }
 
-    bool is_running = true;
+    Screen screen =
+    {
+        .height = surface->h,
+        .width  = surface->w,
+        .x_pos  = 0,
+        .y_pos  = 0,
+        .zoom   = DEFAULT_ZOOM,
+        .vmem   = (uint32_t*) surface->pixels
+    };
+
+    Mandelbrot mandelbrot =
+    {
+        .is_running = true,
+        .screen = &screen
+    };
+
     SDL_Event event = {};
 
-    while (is_running)
+    while (mandelbrot.is_running)
     {
         while (SDL_PollEvent(&event))
         {
             switch(event.type)
             {
-                case SDL_QUIT: is_running = false; break;
+                case SDL_QUIT:       mandelbrot.is_running = false;         break;
+                case SDL_MOUSEWHEEL: scroll_handler(&event, &screen);       break;
+                case SDL_KEYDOWN:    keyboard_handler(&event, &mandelbrot); break;
                 default: break;
             }
         }
 
-        SDL_FillRect( surface, NULL, SDL_MapRGB( surface->format, 0xFF, 0xFF, 0xFF ) );
+        draw_mandelbrot(surface, &screen);
         SDL_UpdateWindowSurface(window);
     }
 
