@@ -1,5 +1,5 @@
 include colors.mk
-CFLAGS		:= -fdiagnostics-color=always
+CFLAGS		:= -fdiagnostics-color=always -mavx -mavx2
 SRC_DIR		:= Sources
 INC_DIR		:= -I Includes/
 OBJ_DIR		:= Objects
@@ -7,7 +7,6 @@ TARGET		:= mandelbrot
 LIBS		:= -lSDL2
 
 SOURCES     := $(wildcard $(SRC_DIR)/*.cpp)
-INCLUDES    := $(wildcard $(INC_DIR)/*.h)
 OBJECTS     := $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 all:        dir  $(TARGET)

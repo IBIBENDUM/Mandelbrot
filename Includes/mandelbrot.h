@@ -23,6 +23,8 @@ struct Mandelbrot
 enum error_code
 {
     NO_ERR,
+    NULL_PTR_ERR,
+    SDL_ERR,
 };
 
 error_code draw_mandelbrot(SDL_Surface* surface, Screen* screen);

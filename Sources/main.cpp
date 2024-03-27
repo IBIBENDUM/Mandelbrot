@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "mandelbrot.h"
+#include "mandelbrot_config.h"
 #include "events_handlers.h"
 
 int main(int argc, char* args[])
@@ -64,7 +65,7 @@ int main(int argc, char* args[])
             }
         }
 
-        draw_mandelbrot(surface, &screen);
+        if (draw_mandelbrot(surface, &screen)) break;
         SDL_UpdateWindowSurface(window);
     }
 
