@@ -19,7 +19,12 @@ OBJECTS     := $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 all:        dir  $(EXEC)
 
 $(EXEC):    $(OBJECTS)
-			@$(CXX) -o $@ $(CFLAGS) $(OBJECTS) $(LIBS)
+			@if $(CXX) -o $@ $(CFLAGS) $(OBJECTS) $(LIBS); then\
+				echo "Compiled $(BOLD_GREEN)successfully!$(CLR_END)";           \
+			else                                                                \
+				echo "Compile $(CLR_RED)error!$(CLR_END)";                      \
+			fi
+
 # @echo "Linking $(CLR_GREEN)succeeded$(CLR_END)!"
 
 $(OBJECTS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
@@ -40,8 +45,8 @@ help:		## Display help
 					printf "$(BOLD_BLUE)%-15s$(CLR_END)%s\n", $$1, $$2                             \
 				}                                                                                  \
 				/^##@/ {                                                                           \
-        			printf "\n$(FONT_BOLD)%s$(CLR_END)\n", substr($$0, 5)                          \
-    			} '  Makefile
+					printf "\n$(FONT_BOLD)%s$(CLR_END)\n", substr($$0, 5)                          \
+				} '  Makefile
 
 .PHONY:		run
 run:		## Run program
@@ -52,8 +57,14 @@ run:		## Run program
 dir:		## Сreate folder for object files
 			@mkdir -p $(OBJ_DIR)
 
+# BAH: is it normal to use -f especially in this case?
 .PHONY:     clean
-clean:		## Remove object files
-			@rm -r $(OBJ_DIR)
-			@rm -r $(EXEC)
-			@echo "$(CLR_CYAN)Object files cleanup complete!$(CLR_END)"
+clean:		## Remove binaries
+			@if [ -d $(OBJ_DIR) -o -e $(EXEC) ]; then                     \
+				rm -rf $(OBJ_DIR);                                        \
+				rm -f $(EXEC);                                            \
+				echo "$(CLR_CYAN)Binaries remove complete!$(CLR_END)";    \
+			else                                                          \
+				echo "$(CLR_MAGENTA)Binaries already removed!$(CLR_END)"; \
+			fi
+# $(EXEC)
