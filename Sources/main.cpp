@@ -1,5 +1,6 @@
-#include <SDL2/SDL.h>
+#include <time.h>
 #include <stdio.h>
+#include <SDL2/SDL.h>
 
 #include "mandelbrot.h"
 #include "mandelbrot_config.h"
