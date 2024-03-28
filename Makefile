@@ -1,41 +1,51 @@
 include colors.mk
+DEDFLAGS	:= -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal			   \
+			   -Wnon-virtual-dtor -Woverloaded-virtual -Wpointer-arith -Wsign-promo -Wstack-usage=8192 \
+			   -Wstrict-aliasing -Wstrict-null-sentinel -Wtype-limits -Wwrite-strings -Werror=vla      \
+			   -fexceptions -Wcast-qual -Wctor-dtor-privacy -Wempty-body -Wformat-security             \
+			   -Wformat=2 -Wignored-qualifiers -Wlogical-op -Wno-missing-field-initializers            \
+			   -Wswitch-enum -Wswitch-default -Weffc++ -Wmain -Wextra -Wall -g -pipe                   \
+		 	   -Winline -Wunreachable-code -Wmissing-include-dirs
 CFLAGS		:= -fdiagnostics-color=always -mavx -mavx2
 SRC_DIR		:= Sources
 INC_DIR		:= -I Includes/
 OBJ_DIR		:= Objects
-TARGET		:= mandelbrot
+EXEC		:= mandelbrot
 LIBS		:= -lSDL2
 
 SOURCES     := $(wildcard $(SRC_DIR)/*.cpp)
 OBJECTS     := $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-all:        dir  $(TARGET)
+all:        dir  $(EXEC)
 
-$(TARGET):  $(OBJECTS)
+$(EXEC):    $(OBJECTS)
 			@$(CXX) -o $@ $(CFLAGS) $(OBJECTS) $(LIBS)
-			@echo "Linked   $(BOLD_GREEN)"$<"$(CLR_END) successfully!"
+# @echo "Linking $(CLR_GREEN)succeeded$(CLR_END)!"
 
 $(OBJECTS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
-			@$(CXX) $(CFLAGS) $(INC_DIR) -c $< -o $@
-			@echo "Compiled $(BOLD_GREEN)"$<"$(CLR_END) successfully!"
+			@if $(CXX) $(CFLAGS) $(INC_DIR) -c $< -o $@; then              \
+				echo "Compiled $(BOLD_GREEN)"$<"$(CLR_END) successfully!"; \
+			else                                                           \
+				echo "Compile $(CLR_RED)"$<"$(CLR_END) error!";            \
+			fi
+
 ##@ General
 .PHONY:		help
 help:		## Display help
-			@awk 'BEGIN {\
-					FS = ":.*##";\
-					printf "Mandelbrot program version 111";\
-					printf "$(FONT_BOLD)\nUsage:\n$(CLR_END)make $(BOLD_BLUE)<target>$(CLR_END)\n"\
-				}\
-				/^[a-zA-Z_0-9-]+:.*?##/ {\
-					printf "$(BOLD_BLUE)%-15s$(CLR_END)%s\n", $$1, $$2\
-				}\
-				/^##@/ {\
-        			printf "\n$(FONT_BOLD)%s$(CLR_END)\n", substr($$0, 5)\
+			@awk 'BEGIN {                                                                          \
+					FS = ":.*##";                                                                  \
+					printf "$(FONT_BOLD)\nUsage:\n$(CLR_END)make $(BOLD_BLUE)<target>$(CLR_END)\n" \
+				}                                                                                  \
+				/^[a-zA-Z_0-9-]+:.*?##/ {                                                          \
+					printf "$(BOLD_BLUE)%-15s$(CLR_END)%s\n", $$1, $$2                             \
+				}                                                                                  \
+				/^##@/ {                                                                           \
+        			printf "\n$(FONT_BOLD)%s$(CLR_END)\n", substr($$0, 5)                          \
     			} '  Makefile
 
 .PHONY:		run
 run:		## Run program
-			./$(TARGET)
+			./$(EXEC)
 
 ##@ Development
 .PHONY:     dir
@@ -45,4 +55,5 @@ dir:		## Сreate folder for object files
 .PHONY:     clean
 clean:		## Remove object files
 			@rm -r $(OBJ_DIR)
-			@echo "Object files cleanup complete!"
+			@rm -r $(EXEC)
+			@echo "$(CLR_CYAN)Object files cleanup complete!$(CLR_END)"
