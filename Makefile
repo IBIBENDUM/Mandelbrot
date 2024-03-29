@@ -43,16 +43,16 @@ run:		## Run program
 
 .PHONY:		help
 help:		## Display help
-			@awk 'BEGIN {                                                                          \
-					FS = ":.*##";                                                                  \
-					printf "$(FONT_BOLD)Usage:\n$(CLR_END)make $(BOLD_BLUE)<target>$(CLR_END)\n"   \
-				}                                                                                  \
-				/^[a-zA-Z_0-9-]+:.*?##/ {                                                          \
-					printf "$(BOLD_BLUE)%-15s$(CLR_END)%s\n", $$1, $$2                             \
-				}                                                                                  \
-				/^##@/ {                                                                           \
-					printf "\n$(FONT_BOLD)%s$(CLR_END)\n", substr($$0, 5)                          \
-				} '  Makefile
+			@awk 'BEGIN {                                                 \
+					FS = ":.*##";                                         \
+				}                                                         \
+				/^[a-zA-Z_0-9-]+:.*?##/ {                                 \
+					printf "$(BOLD_BLUE)%-15s$(CLR_END)%s\n", $$1, $$2    \
+				}                                                         \
+				/^##@/ {                                                  \
+					printf "\n$(FONT_BOLD)%s$(CLR_END)\n", substr($$0, 5) \
+				}                                                         \
+				END { printf "\n"; }'  Makefile
 
 ##@ Development
 
