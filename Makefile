@@ -26,7 +26,7 @@ IS_BUILT    := 0 # Flag to indicate if a successful build has occurred
 
 ##@ General
 .PHONY:		build
-build:      $(TMP_DIRS) $(EXEC)	## Build project
+build:      $(EXEC)	## Build project
 			@if [ $(IS_BUILT) -eq 1 ] ; then                                     \
 				echo "$(CLR_CYAN)Project built successfully!$(CLR_END)";         \
 			else                                                           		 \
@@ -39,7 +39,7 @@ $(EXEC):    $(OBJECTS)
 
 $(OBJ_DIR)/%.o : BASENAME = $(basename $(notdir $@))
 				 OUT_NAME = $(DEP_DIR)/$(BASENAME).d
-$(OBJECTS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
+$(OBJECTS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp | $(TMP_DIRS)
 			@if $(CXX) $(CXXFLAGS) $(INC_DIR) -c $< -o $@ $(DEPFLAGS); then \
 				echo "Compiled $(BOLD_GREEN)"$<"$(CLR_END) successfully!";  \
 			else                                                            \

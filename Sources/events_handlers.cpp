@@ -2,10 +2,11 @@
 
 #include "mandelbrot.h"
 #include "mandelbrot_config.h"
+#include "utils.h"
 
-int keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
+error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
 {
-    // BAH: error handlers
+    RET_IF_ERR(event && mandelbrot, NULL_PTR_ERR);
 
     switch(event->key.keysym.sym)
     {
@@ -16,21 +17,32 @@ int keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
         default: break;
     };
 
-    return 0; // BAH: error codes
+    return NO_ERR;
 }
 
-int scroll_handler(SDL_Event* event, Screen* screen)
+error_code scroll_handler(SDL_Event* event, Screen* screen)
 {
-    // BAH: error handlers
+    RET_IF_ERR(event && screen, NULL_PTR_ERR);
+
+    float zoom_factor = 1;
     if(event->wheel.y > 0)
-        screen->zoom += ZOOM_FACTOR;
+        zoom_factor -= ZOOM_STEP;
     else
-        screen->zoom -= ZOOM_FACTOR;
+        zoom_factor += ZOOM_STEP;
 
-    // BAH: Add cursor based zoom
-    // int mouse_x_pos = 0;
-    // int mouse_y_pos = 0;
-    // SDL_GetMouseState(&mouse_x_pos, &mouse_y_pos);
+    int mouse_x = 0;
+    int mouse_y = 0;
+    SDL_GetMouseState(&mouse_x, &mouse_y);
 
-    return 0; // BAH: error codes
+    const float center_x = screen->width  / 2;
+    const float center_y = screen->height / 2;
+
+    const float mouse_rel_x = screen->x_pos + mouse_x - center_x;
+    const float mouse_rel_y = screen->y_pos + mouse_y - center_y;
+
+    screen->x_pos += mouse_rel_x * (zoom_factor - 1);
+    screen->y_pos += mouse_rel_y * (zoom_factor - 1);
+    screen->zoom  *= zoom_factor;
+
+    return NO_ERR;
 }

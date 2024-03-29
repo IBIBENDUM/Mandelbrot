@@ -6,8 +6,8 @@ const int         WINDOW_WIDTH         = 600;
 const int         WINDOW_HEIGHT        = 600;
 
 const float       DEFAULT_ZOOM         = 300.0;
-const float       ZOOM_FACTOR          = 10.0;
-const int         KBRD_COORD_STEP      = 20;
+const float       ZOOM_STEP            = 0.1;
+const int         KBRD_COORD_STEP      = 10;
 
 const size_t      MAX_ITERATION_NUMBER = 256;
 const float       MAX_RADIUS2          = 100;

@@ -3,11 +3,14 @@
 
 struct Screen
 {
-    int height;
-    int width;
+    int       height;
+    int       width;
 
-    double    x_pos;
-    double    y_pos;
+    int       x_pos;
+    int       y_pos;
+
+    int       x_speed;
+    int       y_speed;
 
     double    zoom;
 
@@ -16,8 +19,10 @@ struct Screen
 
 struct Mandelbrot
 {
-    bool is_running;
-    Screen* screen;
+    bool      is_running;
+
+    Screen*   screen;
+    uint32_t* palette;
 };
 
 enum error_code
@@ -27,7 +32,7 @@ enum error_code
     SDL_ERR,
 };
 
-error_code draw_mandelbrot(SDL_Surface* surface, Screen* screen);
+error_code draw_mandelbrot(SDL_Surface* surface, Mandelbrot* mandelbrot);
 
 
 #endif // MANDELBROT_H_
