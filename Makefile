@@ -7,7 +7,7 @@ DEDFLAGS	:= -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-
 			   -Wformat=2 -Wignored-qualifiers -Wlogical-op -Wno-missing-field-initializers            \
 			   -Wswitch-enum -Wswitch-default -Weffc++ -Wmain -Wextra -Wall -g -pipe                   \
 		 	   -Winline -Wunreachable-code -Wmissing-include-dirs
-CFLAGS		:= -fdiagnostics-color=always -mavx -mavx2
+CFLAGS		:= -fdiagnostics-color=always -mavx -mavx2 -MMD -MP
 SRC_DIR		:= Sources
 INC_DIR		:= -I Includes/
 OBJ_DIR		:= Objects
@@ -15,7 +15,7 @@ EXEC		:= mandelbrot
 LIBS		:= -lSDL2
 SOURCES     := $(wildcard $(SRC_DIR)/*.cpp)
 OBJECTS     := $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
-IS_BUILT    := 0 ; # Flag to indicate if a successful build has occurred
+IS_BUILT    := 0 # Flag to indicate if a successful build has occurred
 
 ##@ General
 .PHONY:		build
@@ -69,3 +69,5 @@ clean:		## Remove binaries
 $(OBJ_DIR):
 			@mkdir -p $(OBJ_DIR)
 
+# BAH: Read about this know i go to sleep!
+-include $(OBJECTS:.o=.d)
