@@ -32,22 +32,19 @@ static size_t calc_mandelbrot_point_primitive(const float x0, const float y0)
     return iteration;
 }
 
-error_code calc_mandelbrot_primitive(Mandelbrot* mandelbrot)
+error_code calc_mandelbrot_primitive(const Mandelbrot* mandelbrot)
 {
     RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
 
     uint32_t* palette = mandelbrot->palette;
     Screen*    screen = mandelbrot->screen;
 
-    const float x_shift = screen->width  / 2.0;
-    const float y_shift = screen->height / 2.0;
-
     for (int iy = 0; iy < screen->height; iy++)
     {
-        const float y0 = ((float)iy - y_shift + screen->y_pos) / screen->zoom;
+        const float y0 = ((float)iy - mandelbrot->shift_y + screen->pos_y) / screen->zoom;
         for (int ix = 0; ix < screen->width; ix++)
         {
-            const float x0 = ((float)ix - x_shift + screen->x_pos) / screen->zoom;
+            const float x0 = ((float)ix - mandelbrot->shift_x + screen->pos_x) / screen->zoom;
 
             size_t iteration = calc_mandelbrot_point_primitive(x0, y0);
 
@@ -111,9 +108,7 @@ static mmxi_t calc_mandelbrot_point_AVX2_overload_ops(const mmxf_t x0, const mmx
         const mmxf_t radius2 = x2 + y2;
 
         const mmxf_t cmp_mask = radius2 < MAX_RADIUS_2_256;
-        int mask = _mm256_movemask_ps(cmp_mask);
-
-        if (!mask)
+        if (_mm256_testz_ps(cmp_mask, cmp_mask))
             break;
 
         y = xy + xy + y0;
@@ -131,7 +126,7 @@ static mmxi_t calc_mandelbrot_point_AVX2(const __m256 x0, const __m256 y0)
 
     __m256i iterations = _mm256_setzero_si256();
 
-    for (int iteration = 0; iteration < 256; iteration++)
+    for (int iteration = 0; iteration < MAX_ITERATION_NUMBER; iteration++)
     {
         const __m256 x2      = _mm256_mul_ps(x,  x);
         const __m256 y2      = _mm256_mul_ps(y,  y);
@@ -139,9 +134,7 @@ static mmxi_t calc_mandelbrot_point_AVX2(const __m256 x0, const __m256 y0)
         const __m256 radius2 = _mm256_add_ps(x2, y2);
 
         __m256 cmp_mask = _mm256_cmp_ps(radius2, MAX_RADIUS_2_256, _CMP_NGE_UQ);
-        int        mask = _mm256_movemask_ps(cmp_mask);
-
-        if (!mask)
+        if (_mm256_testz_ps(cmp_mask, cmp_mask))
             break;
 
         x = _mm256_add_ps(x0, _mm256_sub_ps(x2, y2));
@@ -149,32 +142,28 @@ static mmxi_t calc_mandelbrot_point_AVX2(const __m256 x0, const __m256 y0)
 
         iterations = _mm256_sub_epi32(iterations, _mm256_castps_si256(cmp_mask));
     }
-
     return iterations;
 }
-error_code calc_mandelbrot_AVX2(Mandelbrot* mandelbrot)
+
+error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
 {
     RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
 
     uint32_t* palette = mandelbrot->palette;
     Screen*    screen = mandelbrot->screen;
-
-    // BAH: remake this
-    const float x_shift = screen->width  / 2;
-    const float y_shift = screen->height / 2;
-
-    const float invert_zoom = 1 / screen->zoom;
-    const __m256 DX = _mm256_mul_ps(_mm256_set1_ps(invert_zoom), DX_FACTOR);
+    const float coord_x = screen->pos_x - mandelbrot->shift_x;
+    const float coord_y = screen->pos_y - mandelbrot->shift_y;
 
     __m256i* vmem_buffer = (__m256i*) screen->vmem;
 
     for (int iy = 0; iy < screen->height; iy++)
     {
-        const __m256 y0 = _mm256_set1_ps(((float)iy - y_shift + screen->y_pos) / screen->zoom);
+        const __m256 y0 = _mm256_set1_ps(((float)iy + coord_y) / screen->zoom);
 
         for (int ix = 0; ix < screen->width; ix += PARALLEL_PIXELS_NUMBER)
         {
-            const __m256 x0 = _mm256_add_ps(_mm256_set1_ps(((float)ix - x_shift + screen->x_pos) / screen->zoom), DX);
+            __m256 x0 = _mm256_set1_ps(((float)ix + coord_x) / screen->zoom);
+            x0 = _mm256_add_ps(x0, mandelbrot->dx);
 
             __m256i iterations = calc_mandelbrot_point_AVX2(x0, y0);
 
@@ -184,19 +173,16 @@ error_code calc_mandelbrot_AVX2(Mandelbrot* mandelbrot)
             vmem_buffer++;
         }
     }
-
     return NO_ERR;
 }
 
-error_code draw_mandelbrot(SDL_Surface* surface, Mandelbrot* mandelbrot)
+error_code draw_mandelbrot(SDL_Surface* surface, const Mandelbrot* mandelbrot)
 {
     RET_IF_ERR(surface && mandelbrot, NULL_PTR_ERR);
 
     RET_IF_ERR(!SDL_LockSurface(surface), SDL_ERR);
 
-    // calc_mandelbrot_primitive(mandelbrot);
-
-    calc_mandelbrot_AVX2(mandelbrot);
+    mandelbrot->func(mandelbrot);
 
     SDL_UnlockSurface(surface);
 

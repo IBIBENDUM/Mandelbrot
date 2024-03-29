@@ -3,7 +3,7 @@
 
 error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot);
 
-error_code scroll_handler(SDL_Event* event, Screen* screen);
+error_code scroll_handler(SDL_Event* event, Mandelbrot* screen);
 
 error_code movement_handler(SDL_Event* event, Screen* screen);
 

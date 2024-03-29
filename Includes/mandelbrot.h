@@ -1,16 +1,33 @@
 #ifndef MANDELBROT_H_
 #define MANDELBROT_H_
 
+#include "utils.h"
+
+enum error_code
+{
+    NO_ERR,
+    NULL_PTR_ERR,
+    SDL_ERR,
+};
+
+struct Mandelbrot;
+typedef error_code (*calc_algorithm_func)(const Mandelbrot*);
+enum Calc_algorithm
+{
+    PRIMITIVE,
+    AVX2,
+};
+
 struct Screen
 {
     int       height;
     int       width;
 
-    int       x_pos;
-    int       y_pos;
+    int       pos_x;
+    int       pos_y;
 
-    int       x_speed;
-    int       y_speed;
+    int       speed_x;
+    int       speed_y;
 
     double    zoom;
 
@@ -21,19 +38,30 @@ struct Mandelbrot
 {
     bool      is_running;
 
+    Calc_algorithm  cur_func;
+    calc_algorithm_func func;
+
     Screen*   screen;
+    float     shift_x;
+    float     shift_y;
+
     uint32_t* palette;
+
+    __m256    dx;
 };
 
-enum error_code
+error_code calc_mandelbrot_primitive(const Mandelbrot* );
+
+error_code calc_mandelbrot_AVX2(const Mandelbrot* );
+
+const calc_algorithm_func CALC_FUNCS[] =
 {
-    NO_ERR,
-    NULL_PTR_ERR,
-    SDL_ERR,
+    calc_mandelbrot_primitive,
+    calc_mandelbrot_AVX2,
 };
+const int CALC_FUNCS_AMOUNT = sizeof(CALC_FUNCS) / sizeof(calc_algorithm_func);
 
-error_code draw_mandelbrot(SDL_Surface* surface, Mandelbrot* mandelbrot);
-
+error_code draw_mandelbrot(SDL_Surface*, const Mandelbrot* );
 
 #endif // MANDELBROT_H_
 

@@ -21,16 +21,17 @@ int main()
     RET_IF_ERR(surface, NULL_PTR_ERR);
 
     // BAH: make pallete create function
-    uint32_t PALETTE[256] = {};
-    for (int i = 0; i < 256; i++)
+    uint32_t PALETTE[MAX_ITERATION_NUMBER + 1] = {};
+    for (int i = 0; i < MAX_ITERATION_NUMBER; i++)
         PALETTE[i] = (i % 2 == 0)? 0xFFFFFF: 0x000000;
+    PALETTE[MAX_ITERATION_NUMBER] = 0;
 
     Screen screen =
     {
         .height = surface->h,
         .width  = surface->w,
-        .x_pos  = 0,
-        .y_pos  = 0,
+        .pos_x  = 0,
+        .pos_y  = 0,
         .zoom   = DEFAULT_ZOOM,
         .vmem   = (uint32_t*) surface->pixels
     };
@@ -38,8 +39,13 @@ int main()
     Mandelbrot mandelbrot =
     {
         .is_running = true,
+        .cur_func   = AVX2,
+        .func       = CALC_FUNCS[AVX2],
         .screen     = &screen,
-        .palette    = PALETTE
+        .shift_x    = screen.width  / 2.0f,
+        .shift_y    = screen.height / 2.0f,
+        .palette    = PALETTE,
+        .dx         = _mm256_mul_ps(_mm256_set1_ps(1 / DEFAULT_ZOOM), DX_FACTOR)
     };
 
     SDL_Event event = {};
@@ -51,14 +57,23 @@ int main()
         {
             switch(event.type)
             {
-                case SDL_QUIT:       mandelbrot.is_running = false;         break;
-                case SDL_MOUSEWHEEL: scroll_handler(&event, &screen);       break;
+                case SDL_QUIT: {
+                    mandelbrot.is_running = false;
+                    break;
+                }
+                case SDL_MOUSEWHEEL: {
+                    scroll_handler(&event, &mandelbrot);
+                    break;
+                }
                 case SDL_MOUSEMOTION: {
                     if (event.motion.state & SDL_BUTTON_LMASK)
                         movement_handler(&event, &screen);
                     break;
                 }
-                case SDL_KEYDOWN:    keyboard_handler(&event, &mandelbrot); break;
+                case SDL_KEYDOWN: {
+                    keyboard_handler(&event, &mandelbrot);
+                    break;
+                }
                 default: break;
             }
         }
@@ -66,7 +81,7 @@ int main()
         clock_t tic_start = clock();
         if (draw_mandelbrot(surface, &mandelbrot)) break;
         clock_t tic_end = clock();
-        // fprintf(stderr, "Ellapsed %ld ticks\n", tic_end - tic_start);
+        fprintf(stderr, "Ellapsed %ld ticks\n", tic_end - tic_start);
 
         SDL_UpdateWindowSurface(window);
     }
