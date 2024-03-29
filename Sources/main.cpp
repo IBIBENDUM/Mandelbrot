@@ -53,6 +53,11 @@ int main()
             {
                 case SDL_QUIT:       mandelbrot.is_running = false;         break;
                 case SDL_MOUSEWHEEL: scroll_handler(&event, &screen);       break;
+                case SDL_MOUSEMOTION: {
+                    if (event.motion.state & SDL_BUTTON_LMASK)
+                        movement_handler(&event, &screen);
+                    break;
+                }
                 case SDL_KEYDOWN:    keyboard_handler(&event, &mandelbrot); break;
                 default: break;
             }

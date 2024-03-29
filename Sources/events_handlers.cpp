@@ -46,3 +46,14 @@ error_code scroll_handler(SDL_Event* event, Screen* screen)
 
     return NO_ERR;
 }
+
+
+error_code movement_handler(SDL_Event* event, Screen* screen)
+{
+    RET_IF_ERR(event && screen, NULL_PTR_ERR);
+
+    screen->x_pos -= event->motion.xrel;
+    screen->y_pos -= event->motion.yrel;
+
+    return NO_ERR;
+}
