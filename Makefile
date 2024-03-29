@@ -7,19 +7,26 @@ DEDFLAGS	:= -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-
 			   -Wformat=2 -Wignored-qualifiers -Wlogical-op -Wno-missing-field-initializers            \
 			   -Wswitch-enum -Wswitch-default -Weffc++ -Wmain -Wextra -Wall -g -pipe                   \
 		 	   -Winline -Wunreachable-code -Wmissing-include-dirs
-CFLAGS		:= -fdiagnostics-color=always -mavx -mavx2 -MMD -MP
+CXXFLAGS	:= -mavx -mavx2
+LDFLAGS		:= $(CXXFLAGS)
+DEPFLAGS	= -MMD -MP -MF $(OUT_NAME)
+
 SRC_DIR		:= Sources
 INC_DIR		:= -I Includes/
-OBJ_DIR		:= Objects
+
+OBJ_DIR		:= objects
+DEP_DIR		:= headers
+TMP_DIRS    := $(OBJ_DIR) $(DEP_DIR)
+
 EXEC		:= mandelbrot
-LIBS		:= -lSDL2
+LDIBS		:= -lSDL2
 SOURCES     := $(wildcard $(SRC_DIR)/*.cpp)
 OBJECTS     := $(SOURCES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 IS_BUILT    := 0 # Flag to indicate if a successful build has occurred
 
 ##@ General
 .PHONY:		build
-build:      $(OBJ_DIR) $(EXEC)	## Build project
+build:      $(TMP_DIRS) $(EXEC)	## Build project
 			@if [ $(IS_BUILT) -eq 1 ] ; then                                     \
 				echo "$(CLR_CYAN)Project built successfully!$(CLR_END)";         \
 			else                                                           		 \
@@ -27,14 +34,16 @@ build:      $(OBJ_DIR) $(EXEC)	## Build project
 			fi
 
 $(EXEC):    $(OBJECTS)
-			@$(CXX) -o $@ $(OBJECTS) $(CFLAGS) $(LIBS)
+			@$(CXX) -o $@ $(OBJECTS) $(LDFLAGS) $(LDIBS)
 			$(eval IS_BUILT = 1)
 
+$(OBJ_DIR)/%.o : BASENAME = $(basename $(notdir $@))
+				 OUT_NAME = $(DEP_DIR)/$(BASENAME).d
 $(OBJECTS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
-			@if $(CXX) $(CFLAGS) $(INC_DIR) -c $< -o $@; then              \
-				echo "Compiled $(BOLD_GREEN)"$<"$(CLR_END) successfully!"; \
-			else                                                           \
-				echo "Compile $(CLR_RED)"$<"$(CLR_END) error!";            \
+			@if $(CXX) $(CXXFLAGS) $(INC_DIR) -c $< -o $@ $(DEPFLAGS); then \
+				echo "Compiled $(BOLD_GREEN)"$<"$(CLR_END) successfully!";  \
+			else                                                            \
+				echo "Compile $(CLR_RED)"$<"$(CLR_END) error!";             \
 			fi
 
 .PHONY:		run
@@ -58,16 +67,16 @@ help:		## Display help
 
 .PHONY:     clean
 clean:		## Remove binaries
-			@if [ -d $(OBJ_DIR) -o -e $(EXEC) ]; then                     \
+			@if [ "$(wildcard $(TMP_DIRS))" -o -e $(EXEC) ]; then         \
 				$(RM) -r $(OBJ_DIR);                                      \
+				$(RM) -r $(DEP_DIR);                                      \
 				$(RM) $(EXEC);                                            \
 				echo "$(CLR_CYAN)Binaries removed!$(CLR_END)";            \
 			else                                                          \
 				echo "$(CLR_MAGENTA)Binaries already removed!$(CLR_END)"; \
 			fi
 
-$(OBJ_DIR):
-			@mkdir -p $(OBJ_DIR)
+$(TMP_DIRS):
+			@mkdir -p $@
 
-# BAH: Read about this know i go to sleep!
--include $(OBJECTS:.o=.d)
+-include $(OBJECTS:$(OBJ_DIR)/%.o=$(DEP_DIR)/%.d)
