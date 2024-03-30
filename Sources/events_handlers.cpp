@@ -82,7 +82,6 @@ static error_code movement_handler(SDL_Event* event, Screen* screen)
     return NO_ERR;
 }
 
-const int WIDTH_ALIGN_16 = ~0x7;  // Align width by 8 so that AVX instructions do not overflow the buffer
 static error_code resize_handler(Mandelbrot* mandelbrot)
 {
     RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
@@ -91,7 +90,7 @@ static error_code resize_handler(Mandelbrot* mandelbrot)
     int height = 0;
     SDL_Window* window = mandelbrot->screen->window;
     SDL_GetWindowSize(window, &width, &height);
-    width &= WIDTH_ALIGN_16;
+    width &= WIDTH_ALIGN_8;
 
     mandelbrot->screen->height = height;
     mandelbrot->screen->width  = width;
