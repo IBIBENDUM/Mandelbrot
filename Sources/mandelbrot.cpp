@@ -185,7 +185,7 @@ error_code draw_mandelbrot(const Mandelbrot* mandelbrot)
     return NO_ERR;
 }
 
-Mandelbrot* init_mandelbrot(SDL_Window* window, SDL_Surface* surface)
+Mandelbrot* init_mandelbrot(SDL_Window* window, SDL_Surface* surface, SDL_Renderer* renderer, TTF_Font* font)
 {
     Screen* screen = (Screen*) calloc(1, sizeof(Screen));
 
@@ -193,6 +193,8 @@ Mandelbrot* init_mandelbrot(SDL_Window* window, SDL_Surface* surface)
     {
         .window  = window,
         .surface = surface,
+        .renderer = renderer,
+        .font    = font,
         .height  = surface->h,
         .width   = surface->w,
         .pos_x   = 0,

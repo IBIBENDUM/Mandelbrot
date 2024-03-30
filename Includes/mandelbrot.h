@@ -2,6 +2,8 @@
 #define MANDELBROT_H_
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+
 #include "utils.h"
 #include "palettes.h"
 
@@ -24,6 +26,8 @@ struct Screen
 {
     SDL_Window*  window;
     SDL_Surface* surface;
+    SDL_Renderer* renderer;
+    TTF_Font*    font;
 
     int       height;
     int       width;
@@ -43,6 +47,7 @@ struct Mandelbrot
 
     Calc_algorithm      cur_calc;
     calc_algorithm_func calc_func;
+    size_t ticks;
 
     Screen*  screen;
 
@@ -62,10 +67,12 @@ const calc_algorithm_func CALC_FUNCS[] =
     calc_mandelbrot_AVX2,
 };
 const int CALC_FUNCS_AMOUNT = sizeof(CALC_FUNCS) / sizeof(calc_algorithm_func);
+const char* const METHODS_NAMES[CALC_FUNCS_AMOUNT] = {"Primitive", "AVX2"};
+
 
 error_code draw_mandelbrot(const Mandelbrot*);
 
-Mandelbrot* init_mandelbrot(SDL_Window*, SDL_Surface*);
+Mandelbrot* init_mandelbrot(SDL_Window*, SDL_Surface*, SDL_Renderer*, TTF_Font*); // BAH: Add structure for this
 error_code  destruct_mandelbrot(Mandelbrot*);
 
 #endif // MANDELBROT_H_
