@@ -21,10 +21,15 @@ int main()
     RET_IF_ERR(surface, NULL_PTR_ERR);
 
     // BAH: make pallete create function
-    uint32_t PALETTE[MAX_ITERATION_NUMBER + 1] = {};
-    for (int i = 0; i < MAX_ITERATION_NUMBER; i++)
-        PALETTE[i] = (i % 2 == 0)? 0xFFFFFF: 0x000000;
-    PALETTE[MAX_ITERATION_NUMBER] = 0;
+    uint32_t PALETTE[MAX_ITERATION_NUMBER] = {};
+    for (int i = 0; i < MAX_ITERATION_NUMBER / 2; i++)
+        PALETTE[i] = 0x000000;
+
+    for (int i =  MAX_ITERATION_NUMBER / 2; i < MAX_ITERATION_NUMBER; i++)
+        PALETTE[i] = 0xFFFFFF;
+
+        // PALETTE[i] = (i % 2 == 0)? 0xFFFFFF: 0x000000;
+    // PALETTE[MAX_ITERATION_NUMBER] = 0;
 
     Screen screen =
     {
@@ -39,8 +44,8 @@ int main()
     Mandelbrot mandelbrot =
     {
         .is_running = true,
-        .cur_func   = AVX2,
-        .func       = CALC_FUNCS[AVX2],
+        .cur_calc   = AVX2,
+        .calc_func       = CALC_FUNCS[AVX2],
         .screen     = &screen,
         .shift_x    = screen.width  / 2.0f,
         .shift_y    = screen.height / 2.0f,
@@ -78,10 +83,10 @@ int main()
             }
         }
 
-        clock_t tic_start = clock();
+        // clock_t tic_start = clock();
         if (draw_mandelbrot(surface, &mandelbrot)) break;
-        clock_t tic_end = clock();
-        fprintf(stderr, "Ellapsed %ld ticks\n", tic_end - tic_start);
+        // clock_t tic_end = clock();
+        // fprintf(stderr, "Ellapsed %ld ticks\n", tic_end - tic_start);
 
         SDL_UpdateWindowSurface(window);
     }

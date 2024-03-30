@@ -27,8 +27,8 @@ error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
         case SDLK_w: mandelbrot->screen->pos_y -= KBRD_COORD_STEP; break;
         case SDLK_s: mandelbrot->screen->pos_y += KBRD_COORD_STEP; break;
         case SDLK_RETURN: {
-            mandelbrot->cur_func = (Calc_algorithm) ((mandelbrot->cur_func + 1) % CALC_FUNCS_AMOUNT);
-            mandelbrot->func     = CALC_FUNCS[mandelbrot->cur_func];
+            mandelbrot->cur_calc  = (Calc_algorithm) ((mandelbrot->cur_calc + 1) % CALC_FUNCS_AMOUNT);
+            mandelbrot->calc_func = CALC_FUNCS[mandelbrot->cur_calc];
             break;
         }
         default: break;

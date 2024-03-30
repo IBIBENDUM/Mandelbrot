@@ -38,8 +38,8 @@ struct Mandelbrot
 {
     bool      is_running;
 
-    Calc_algorithm  cur_func;
-    calc_algorithm_func func;
+    Calc_algorithm      cur_calc;
+    calc_algorithm_func calc_func;
 
     Screen*   screen;
     float     shift_x;
