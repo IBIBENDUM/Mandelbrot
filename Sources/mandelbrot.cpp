@@ -208,6 +208,7 @@ Mandelbrot* init_mandelbrot(SDL_Window* window, SDL_Surface* surface, SDL_Render
     *mandelbrot = (Mandelbrot)
     {
         .is_running  = true,
+        .show_debug  = true,
         .cur_calc    = CALC_PRIMITIVE,
         .calc_func   = CALC_FUNCS[CALC_PRIMITIVE],
         .screen      = screen,

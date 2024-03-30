@@ -5,6 +5,7 @@
 #include "palettes.h"
 #include "utils.h"
 #include "benchmark.h"
+#include "debug_text.h"
 
 static error_code update_zoom(Mandelbrot* mandelbrot, int x, int y, float zoom)
 {
@@ -14,6 +15,44 @@ static error_code update_zoom(Mandelbrot* mandelbrot, int x, int y, float zoom)
     mandelbrot->screen->pos_y = y;
     mandelbrot->screen->zoom  = zoom;
     mandelbrot->dx            = _mm256_mul_ps(_mm256_set1_ps(1 / zoom), DX_FACTOR);
+
+    return NO_ERR;
+}
+
+static error_code benchmark_handle(Mandelbrot* mandelbrot)
+{
+    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+
+    SDL_Renderer* renderer =  mandelbrot->screen->renderer;
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+    SDL_RenderPresent(renderer);
+
+    draw_benchmark_text(mandelbrot);
+    SDL_RenderPresent(renderer);
+    int ticks_amount = benchmark_function(mandelbrot);
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+    SDL_RenderPresent(renderer);
+
+    draw_benchmark_results(mandelbrot, ticks_amount);
+    SDL_RenderPresent(renderer);
+
+    bool key_pressed = false;
+    SDL_Event event = {};
+    while (!key_pressed)
+    {
+        SDL_PollEvent(&event);
+        switch(event.type)
+        {
+            case SDL_KEYDOWN: {
+                key_pressed = true;
+                break;
+            }
+            default: break;
+        }
+    }
 
     return NO_ERR;
 }
@@ -28,7 +67,8 @@ static error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
         case SDLK_d: mandelbrot->screen->pos_x += KBRD_COORD_STEP; break;
         case SDLK_w: mandelbrot->screen->pos_y -= KBRD_COORD_STEP; break;
         case SDLK_s: mandelbrot->screen->pos_y += KBRD_COORD_STEP; break;
-        case SDLK_b: benchmark_function(mandelbrot, mandelbrot->calc_func); break;
+        case SDLK_b: benchmark_handle(mandelbrot); break;
+        case SDLK_l: mandelbrot->show_debug = !mandelbrot->show_debug; break;
         case SDLK_1: mandelbrot->cur_palette    = PALETTE_EVEN; break;
         case SDLK_2: mandelbrot->cur_palette    = PALETTE_LINEAR; break;
         case SDLK_RETURN: {

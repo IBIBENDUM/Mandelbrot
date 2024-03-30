@@ -44,6 +44,8 @@ struct Screen
 struct Mandelbrot
 {
     bool      is_running;
+    bool      show_debug;
+    bool      show_help;
 
     Calc_algorithm      cur_calc;
     calc_algorithm_func calc_func;

@@ -46,7 +46,8 @@ int main()
         SDL_RenderCopy(renderer, rgb_texture, NULL, NULL);
         SDL_DestroyTexture(rgb_texture);
 
-        draw_debug_text(mandelbrot);
+        if (mandelbrot->show_debug)
+            draw_debug_text(mandelbrot);
 
         SDL_RenderPresent(renderer);
     }

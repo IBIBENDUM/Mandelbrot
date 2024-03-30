@@ -16,8 +16,7 @@ const int         COLOR_DEPTH          = 32;
 const char* const WINDOW_FONT          = "Roboto-Bold.ttf";
 const int         WINDOW_FONT_SIZE     = 14;
 const SDL_Color   WINDOW_FONT_COLOR    = {255, 255, 255, 255};
-const int         TEXT_BG_HEIGHT       = 100;
-const int         TEXT_BG_WIDTH        = 200;
+const int         TEXT_BG_OFFSET       = 10;
 
 const float       DEFAULT_ZOOM         = 300.0;
 const float       ZOOM_STEP            = 0.1;
