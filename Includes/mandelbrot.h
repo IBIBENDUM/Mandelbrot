@@ -1,7 +1,9 @@
 #ifndef MANDELBROT_H_
 #define MANDELBROT_H_
 
+#include <SDL2/SDL.h>
 #include "utils.h"
+#include "palettes.h"
 
 enum error_code
 {
@@ -14,8 +16,8 @@ struct Mandelbrot;
 typedef error_code (*calc_algorithm_func)(const Mandelbrot*);
 enum Calc_algorithm
 {
-    PRIMITIVE,
-    AVX2,
+    CALC_PRIMITIVE,
+    CALC_AVX2,
 };
 
 struct Screen
@@ -41,11 +43,12 @@ struct Mandelbrot
     Calc_algorithm      cur_calc;
     calc_algorithm_func calc_func;
 
-    Screen*   screen;
-    float     shift_x;
-    float     shift_y;
+    Screen*  screen;
+    float    shift_x;
+    float    shift_y;
 
-    uint32_t* palette;
+    Palette  cur_palette;
+    uint32_t* palettes;
 
     __m256    dx;
 };

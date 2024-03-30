@@ -4,6 +4,7 @@
 
 #include "mandelbrot.h"
 #include "mandelbrot_config.h"
+#include "palettes.h"
 #include "events_handlers.h"
 #include "utils.h"
 
@@ -20,16 +21,7 @@ int main()
     SDL_Surface* surface = get_surface(window);
     RET_IF_ERR(surface, NULL_PTR_ERR);
 
-    // BAH: make pallete create function
-    uint32_t PALETTE[MAX_ITERATION_NUMBER] = {};
-    for (int i = 0; i < MAX_ITERATION_NUMBER / 2; i++)
-        PALETTE[i] = 0x000000;
-
-    for (int i =  MAX_ITERATION_NUMBER / 2; i < MAX_ITERATION_NUMBER; i++)
-        PALETTE[i] = 0xFFFFFF;
-
-        // PALETTE[i] = (i % 2 == 0)? 0xFFFFFF: 0x000000;
-    // PALETTE[MAX_ITERATION_NUMBER] = 0;
+    uint32_t* palettes = get_palettes();
 
     Screen screen =
     {
@@ -43,14 +35,15 @@ int main()
 
     Mandelbrot mandelbrot =
     {
-        .is_running = true,
-        .cur_calc   = AVX2,
-        .calc_func       = CALC_FUNCS[AVX2],
-        .screen     = &screen,
-        .shift_x    = screen.width  / 2.0f,
-        .shift_y    = screen.height / 2.0f,
-        .palette    = PALETTE,
-        .dx         = _mm256_mul_ps(_mm256_set1_ps(1 / DEFAULT_ZOOM), DX_FACTOR)
+        .is_running  = true,
+        .cur_calc    = CALC_AVX2,
+        .calc_func   = CALC_FUNCS[CALC_AVX2],
+        .screen      = &screen,
+        .shift_x     = screen.width  / 2.0f,
+        .shift_y     = screen.height / 2.0f,
+        .cur_palette = DEFAULT_PALETTE,
+        .palettes    = palettes,
+        .dx          = _mm256_mul_ps(_mm256_set1_ps(1 / DEFAULT_ZOOM), DX_FACTOR)
     };
 
     SDL_Event event = {};
@@ -70,7 +63,7 @@ int main()
                     scroll_handler(&event, &mandelbrot);
                     break;
                 }
-                case SDL_MOUSEMOTION: {
+                case SDL_MOUSEMOTION: {         //BAH: REMAKE THIS
                     if (event.motion.state & SDL_BUTTON_LMASK)
                         movement_handler(&event, &screen);
                     break;
@@ -91,6 +84,7 @@ int main()
         SDL_UpdateWindowSurface(window);
     }
 
+    // free(mandelbrot.palettes);
     SDL_DestroyWindow(window);
     SDL_Quit();
 

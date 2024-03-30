@@ -2,6 +2,7 @@
 
 #include "mandelbrot.h"
 #include "mandelbrot_config.h"
+#include "palettes.h"
 #include "utils.h"
 
 static error_code update_zoom(Mandelbrot* mandelbrot, int x, int y, float zoom)
@@ -26,6 +27,8 @@ error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
         case SDLK_d: mandelbrot->screen->pos_x += KBRD_COORD_STEP; break;
         case SDLK_w: mandelbrot->screen->pos_y -= KBRD_COORD_STEP; break;
         case SDLK_s: mandelbrot->screen->pos_y += KBRD_COORD_STEP; break;
+        case SDLK_1: mandelbrot->cur_palette    = PALETTE_EVEN; break;
+        case SDLK_2: mandelbrot->cur_palette    = PALETTE_LINEAR; break;
         case SDLK_RETURN: {
             mandelbrot->cur_calc  = (Calc_algorithm) ((mandelbrot->cur_calc + 1) % CALC_FUNCS_AMOUNT);
             mandelbrot->calc_func = CALC_FUNCS[mandelbrot->cur_calc];

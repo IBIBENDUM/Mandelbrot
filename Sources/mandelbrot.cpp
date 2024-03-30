@@ -36,7 +36,7 @@ error_code calc_mandelbrot_primitive(const Mandelbrot* mandelbrot)
 {
     RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
 
-    uint32_t* palette = mandelbrot->palette;
+    uint32_t* palette = get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
     Screen*    screen = mandelbrot->screen;
     uint32_t* vmem_buffer = (uint32_t*) screen->vmem;
 
@@ -146,7 +146,7 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
     RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
 
     Screen*     screen  = mandelbrot->screen;
-    uint32_t*   palette = mandelbrot->palette;
+    uint32_t* palette =  get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
     const float coord_x = screen->pos_x - mandelbrot->shift_x;
     const float coord_y = screen->pos_y - mandelbrot->shift_y;
 
@@ -184,3 +184,31 @@ error_code draw_mandelbrot(SDL_Surface* surface, const Mandelbrot* mandelbrot)
 
     return NO_ERR;
 }
+
+// Mandelbrot* init_mandelbrot(SDL_Surface* surface)
+// {
+//     Screen* screen = (Screen*) calloc(1, sizeof(Screen));
+//     Screen screen =
+//     {
+//         .height = surface->h,
+//         .width  = surface->w,
+//         .pos_x  = 0,
+//         .pos_y  = 0,
+//         .zoom   = DEFAULT_ZOOM,
+//         .vmem   = (uint32_t*) surface->pixels
+//     };
+//
+//     Mandelbrot mandelbrot =
+//     {
+//         .is_running  = true,
+//         .cur_calc    = CALC_AVX2,
+//         .calc_func   = CALC_FUNCS[CALC_AVX2],
+//         .screen      = &screen,
+//         .shift_x     = screen.width  / 2.0f,
+//         .shift_y     = screen.height / 2.0f,
+//         .cur_palette = PALETTE_EVEN,
+//         .palettes    = palettes,
+//         .dx          = _mm256_mul_ps(_mm256_set1_ps(1 / DEFAULT_ZOOM), DX_FACTOR)
+//     };
+//     return mandelbrot;
+// }
