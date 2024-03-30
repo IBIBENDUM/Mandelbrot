@@ -1,6 +1,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "mandelbrot.h"
 #include "mandelbrot_config.h"
@@ -8,90 +9,42 @@
 #include "events_handlers.h"
 #include "utils.h"
 
-// =============================================================================
-SDL_Window* init_window();
-SDL_Surface* get_surface(SDL_Window*);
-// =============================================================================
+SDL_Window* sdl_init_window();
+SDL_Surface* sdl_get_surface(SDL_Window*);
+void sdl_quit(SDL_Window* );
 
 int main()
 {
-    SDL_Window* window = init_window();
-    RET_IF_ERR(window, NULL_PTR_ERR);
+    SDL_Init(SDL_INIT_VIDEO);
+    TTF_Init();
 
-    SDL_Surface* surface = get_surface(window);
+    SDL_Window* window = sdl_init_window();
+    RET_IF_ERR(window, NULL_PTR_ERR);
+// BAH: mb SDL_CreateWindowAndRenderer
+
+    SDL_Surface* surface = sdl_get_surface(window);
     RET_IF_ERR(surface, NULL_PTR_ERR);
 
-    uint32_t* palettes = get_palettes();
+    Mandelbrot* mandelbrot = init_mandelbrot(window, surface);
+    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
 
-    Screen screen =
+    while (mandelbrot->is_running)
     {
-        .height = surface->h,
-        .width  = surface->w,
-        .pos_x  = 0,
-        .pos_y  = 0,
-        .zoom   = DEFAULT_ZOOM,
-        .vmem   = (uint32_t*) surface->pixels
-    };
+        handle_events(mandelbrot);
 
-    Mandelbrot mandelbrot =
-    {
-        .is_running  = true,
-        .cur_calc    = CALC_AVX2,
-        .calc_func   = CALC_FUNCS[CALC_AVX2],
-        .screen      = &screen,
-        .shift_x     = screen.width  / 2.0f,
-        .shift_y     = screen.height / 2.0f,
-        .cur_palette = DEFAULT_PALETTE,
-        .palettes    = palettes,
-        .dx          = _mm256_mul_ps(_mm256_set1_ps(1 / DEFAULT_ZOOM), DX_FACTOR)
-    };
-
-    SDL_Event event = {};
-
-    Uint32 old_time = 0;
-    while (mandelbrot.is_running)
-    {
-        while (SDL_PollEvent(&event))
-        {
-            switch(event.type)
-            {
-                case SDL_QUIT: {
-                    mandelbrot.is_running = false;
-                    break;
-                }
-                case SDL_MOUSEWHEEL: {
-                    scroll_handler(&event, &mandelbrot);
-                    break;
-                }
-                case SDL_MOUSEMOTION: {         //BAH: REMAKE THIS
-                    if (event.motion.state & SDL_BUTTON_LMASK)
-                        movement_handler(&event, &screen);
-                    break;
-                }
-                case SDL_KEYDOWN: {
-                    keyboard_handler(&event, &mandelbrot);
-                    break;
-                }
-                default: break;
-            }
-        }
-
-        // clock_t tic_start = clock();
-        if (draw_mandelbrot(surface, &mandelbrot)) break;
-        // clock_t tic_end = clock();
-        // fprintf(stderr, "Ellapsed %ld ticks\n", tic_end - tic_start);
+        if (draw_mandelbrot(mandelbrot)) break;
 
         SDL_UpdateWindowSurface(window);
     }
 
-    // free(mandelbrot.palettes);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    destruct_mandelbrot(mandelbrot);
+
+    sdl_quit(window);
 
     return 0;
 }
 
-SDL_Window* init_window()
+SDL_Window* sdl_init_window()
 {
     if(SDL_Init(SDL_INIT_VIDEO))
     {
@@ -111,7 +64,7 @@ SDL_Window* init_window()
     return window;
 }
 
-SDL_Surface* get_surface(SDL_Window* window)
+SDL_Surface* sdl_get_surface(SDL_Window* window)
 {
     SDL_Surface* surface = SDL_GetWindowSurface(window);
     if(!surface)
@@ -123,4 +76,10 @@ SDL_Surface* get_surface(SDL_Window* window)
         return NULL;
     }
     return surface;
+}
+
+void sdl_quit(SDL_Window* window)
+{
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 }

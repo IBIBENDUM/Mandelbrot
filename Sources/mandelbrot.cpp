@@ -38,14 +38,14 @@ error_code calc_mandelbrot_primitive(const Mandelbrot* mandelbrot)
 
     uint32_t* palette = get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
     Screen*    screen = mandelbrot->screen;
-    uint32_t* vmem_buffer = (uint32_t*) screen->vmem;
+    uint32_t* vmem_buffer = (uint32_t*) screen->surface->pixels;
 
     for (int iy = 0; iy < screen->height; iy++)
     {
-        const float y0 = ((float)iy - mandelbrot->shift_y + screen->pos_y) / screen->zoom;
+        const float y0 = ((float)iy - screen->height / 2.0f + screen->pos_y) / screen->zoom;
         for (int ix = 0; ix < screen->width; ix++)
         {
-            const float x0 = ((float)ix - mandelbrot->shift_x + screen->pos_x) / screen->zoom;
+            const float x0 = ((float)ix - screen->width / 2.0f + screen->pos_x) / screen->zoom;
 
             size_t iteration = calc_mandelbrot_point_primitive(x0, y0);
 
@@ -147,10 +147,10 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
 
     Screen*     screen  = mandelbrot->screen;
     uint32_t* palette =  get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
-    const float coord_x = screen->pos_x - mandelbrot->shift_x;
-    const float coord_y = screen->pos_y - mandelbrot->shift_y;
+    const float coord_x = screen->pos_x - screen->width / 2.0f;
+    const float coord_y = screen->pos_y - screen->height / 2.0f;
 
-    __m256i* vmem_buffer = (__m256i*) screen->vmem;
+    __m256i* vmem_buffer = (__m256i*) screen->surface->pixels;
 
     for (int iy = 0; iy < screen->height; iy++)
     {
@@ -163,7 +163,7 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
 
             __m256i iterations = calc_mandelbrot_point_AVX2(x0, y0);
 
-            __m256i colors = _mm256_i32gather_epi32(palette, iterations, 4);
+            __m256i colors = _mm256_i32gather_epi32(palette, iterations, sizeof(uint32_t));
             _mm256_store_si256(vmem_buffer, colors);
 
             vmem_buffer++;
@@ -172,43 +172,58 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
     return NO_ERR;
 }
 
-error_code draw_mandelbrot(SDL_Surface* surface, const Mandelbrot* mandelbrot)
+error_code draw_mandelbrot(const Mandelbrot* mandelbrot)
 {
-    RET_IF_ERR(surface && mandelbrot, NULL_PTR_ERR);
+    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
 
-    RET_IF_ERR(!SDL_LockSurface(surface), SDL_ERR);
+    RET_IF_ERR(!SDL_LockSurface(mandelbrot->screen->surface), SDL_ERR);
 
     mandelbrot->calc_func(mandelbrot);
 
-    SDL_UnlockSurface(surface);
+    SDL_UnlockSurface(mandelbrot->screen->surface);
 
     return NO_ERR;
 }
 
-// Mandelbrot* init_mandelbrot(SDL_Surface* surface)
-// {
-//     Screen* screen = (Screen*) calloc(1, sizeof(Screen));
-//     Screen screen =
-//     {
-//         .height = surface->h,
-//         .width  = surface->w,
-//         .pos_x  = 0,
-//         .pos_y  = 0,
-//         .zoom   = DEFAULT_ZOOM,
-//         .vmem   = (uint32_t*) surface->pixels
-//     };
-//
-//     Mandelbrot mandelbrot =
-//     {
-//         .is_running  = true,
-//         .cur_calc    = CALC_AVX2,
-//         .calc_func   = CALC_FUNCS[CALC_AVX2],
-//         .screen      = &screen,
-//         .shift_x     = screen.width  / 2.0f,
-//         .shift_y     = screen.height / 2.0f,
-//         .cur_palette = PALETTE_EVEN,
-//         .palettes    = palettes,
-//         .dx          = _mm256_mul_ps(_mm256_set1_ps(1 / DEFAULT_ZOOM), DX_FACTOR)
-//     };
-//     return mandelbrot;
-// }
+Mandelbrot* init_mandelbrot(SDL_Window* window, SDL_Surface* surface)
+{
+    Screen* screen = (Screen*) calloc(1, sizeof(Screen));
+
+    *screen = (Screen)
+    {
+        .window  = window,
+        .surface = surface,
+        .height  = surface->h,
+        .width   = surface->w,
+        .pos_x   = 0,
+        .pos_y   = 0,
+        .zoom    = DEFAULT_ZOOM,
+    };
+
+    uint32_t* palettes = get_palettes();
+
+    Mandelbrot* mandelbrot = (Mandelbrot*) calloc(1, sizeof(mandelbrot[0]));
+    *mandelbrot = (Mandelbrot)
+    {
+        .is_running  = true,
+        .cur_calc    = CALC_PRIMITIVE,
+        .calc_func   = CALC_FUNCS[CALC_PRIMITIVE],
+        .screen      = screen,
+        .cur_palette = PALETTE_EVEN,
+        .palettes    = palettes,
+        .dx          = _mm256_mul_ps(_mm256_set1_ps(1 / DEFAULT_ZOOM), DX_FACTOR)
+    };
+
+    return mandelbrot;
+}
+
+error_code destruct_mandelbrot(Mandelbrot* mandelbrot)
+{
+    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+
+    free(mandelbrot->palettes);
+    free(mandelbrot->screen);
+    free(mandelbrot);
+
+    return NO_ERR;
+}

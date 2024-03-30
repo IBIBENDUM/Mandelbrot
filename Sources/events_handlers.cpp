@@ -4,6 +4,7 @@
 #include "mandelbrot_config.h"
 #include "palettes.h"
 #include "utils.h"
+#include "benchmark.h"
 
 static error_code update_zoom(Mandelbrot* mandelbrot, int x, int y, float zoom)
 {
@@ -17,7 +18,7 @@ static error_code update_zoom(Mandelbrot* mandelbrot, int x, int y, float zoom)
     return NO_ERR;
 }
 
-error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
+static error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
 {
     RET_IF_ERR(event && mandelbrot, NULL_PTR_ERR);
 
@@ -27,6 +28,7 @@ error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
         case SDLK_d: mandelbrot->screen->pos_x += KBRD_COORD_STEP; break;
         case SDLK_w: mandelbrot->screen->pos_y -= KBRD_COORD_STEP; break;
         case SDLK_s: mandelbrot->screen->pos_y += KBRD_COORD_STEP; break;
+        case SDLK_b: benchmark_function(mandelbrot, mandelbrot->calc_func); break;
         case SDLK_1: mandelbrot->cur_palette    = PALETTE_EVEN; break;
         case SDLK_2: mandelbrot->cur_palette    = PALETTE_LINEAR; break;
         case SDLK_RETURN: {
@@ -40,7 +42,7 @@ error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
     return NO_ERR;
 }
 
-error_code scroll_handler(SDL_Event* event, Mandelbrot* mandelbrot)
+static error_code scroll_handler(SDL_Event* event, Mandelbrot* mandelbrot)
 {
     RET_IF_ERR(event && mandelbrot, NULL_PTR_ERR);
 
@@ -67,14 +69,10 @@ error_code scroll_handler(SDL_Event* event, Mandelbrot* mandelbrot)
     const int   new_y    = screen->pos_y + mouse_rel_y * (zoom_factor - 1);
     update_zoom(mandelbrot, new_x, new_y, new_zoom);
 
-    // screen->pos_x += mouse_rel_x * (zoom_factor - 1);
-    // screen->pos_y += mouse_rel_y * (zoom_factor - 1);
-    // screen->zoom  *= zoom_factor;
-
     return NO_ERR;
 }
 
-error_code movement_handler(SDL_Event* event, Screen* screen)
+static error_code movement_handler(SDL_Event* event, Screen* screen)
 {
     RET_IF_ERR(event && screen, NULL_PTR_ERR);
 
@@ -83,3 +81,62 @@ error_code movement_handler(SDL_Event* event, Screen* screen)
 
     return NO_ERR;
 }
+
+const int WIDTH_ALIGN_16 = ~0x7;  // Align width by 8 so that AVX instructions do not overflow the buffer
+static error_code resize_handler(Mandelbrot* mandelbrot)
+{
+    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+
+    int width = 0;
+    int height = 0;
+    SDL_Window* window = mandelbrot->screen->window;
+    SDL_GetWindowSize(window, &width, &height);
+    width &= WIDTH_ALIGN_16;
+
+    mandelbrot->screen->height = height;
+    mandelbrot->screen->width  = width;
+    SDL_SetWindowSize(window, width, height);
+    mandelbrot->screen->surface = SDL_GetWindowSurface(window);
+
+    return NO_ERR;
+}
+
+error_code handle_events(Mandelbrot* mandelbrot)
+{
+    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+
+    SDL_Event event = {};
+
+    while (SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_QUIT: {
+                mandelbrot->is_running = false;
+                break;
+            }
+            case SDL_MOUSEWHEEL: {
+                scroll_handler(&event, mandelbrot);
+                break;
+            }
+            case SDL_MOUSEMOTION: {         //BAH: REMAKE THIS
+                if (event.motion.state & SDL_BUTTON_LMASK)
+                    movement_handler(&event, mandelbrot->screen);
+                break;
+            }
+            case SDL_KEYDOWN: {
+                keyboard_handler(&event, mandelbrot);
+                break;
+            }
+            case SDL_WINDOWEVENT: {
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                    resize_handler(mandelbrot);   // BAH: Fix resize bug
+                break;
+            }
+            default: break;
+        }
+    }
+
+    return NO_ERR;
+}
+
