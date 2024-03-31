@@ -7,7 +7,7 @@ The project was tested on AMD Ryzen 7 5700U on Linux Mint 21.3
 
 ## Features
 - 2 types of Mandelbrot set calculation methods: **primitive** and using **SIMD** instructions
-- 2 types of palette: 2 palette types: parity-based and linear gradient
+- 2 palette types: parity-based and linear gradient
 - Benchmark current calculation method
 ## Control
 ### Mouse
@@ -55,7 +55,9 @@ cd Mandelbrot
 make build
 ```
 
+(Optional) Before running the programme, look at the [report on this project](Report/Mandelbrot.pdf)
+
 Now to run program execute `make run`.
 
 ## Future Features
-- Window resizing is not supported at the moment, so if you want to do it, change in the file `Includes/mandelbrot_config.h` constants `WINDOW_HEIGHT` AND `WINDOW_WIDTH`
+- Window resizing is not supported at the moment, so if you want to do it, change in the file `Includes/mandelbrot_config.h` constants `WINDOW_HEIGHT` and `WINDOW_WIDTH`

@@ -163,7 +163,7 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
 
             __m256i iterations = calc_mandelbrot_point_AVX2(x0, y0);
 
-            __m256i colors = _mm256_i32gather_epi32(palette, iterations, sizeof(uint32_t));
+            __m256i colors = _mm256_i32gather_epi32((const int*) palette, iterations, sizeof(uint32_t));
             _mm256_store_si256(vmem_buffer, colors);
 
             vmem_buffer++;
