@@ -21,6 +21,7 @@ enum Calc_algorithm
     CALC_PRIMITIVE,
     CALC_AVX2,
     CALC_AVX2_OVERLOAD,
+    CALC_VECTORIZED,
 };
 
 struct Screen
@@ -66,14 +67,17 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot*);
 
 error_code calc_mandelbrot_AVX2_overload_ops(const Mandelbrot*);
 
+error_code calc_mandelbrot_vector(const Mandelbrot*);
+
 const calc_algorithm_func CALC_FUNCS[] =
 {
     calc_mandelbrot_primitive,
     calc_mandelbrot_AVX2,
     calc_mandelbrot_AVX2_overload_ops,
+    calc_mandelbrot_vector,
 };
 const int CALC_FUNCS_AMOUNT = sizeof(CALC_FUNCS) / sizeof(calc_algorithm_func);
-const char* const METHODS_NAMES[CALC_FUNCS_AMOUNT] = {"Primitive", "AVX2", "AVX2 with overload"};
+const char* const METHODS_NAMES[CALC_FUNCS_AMOUNT] = {"Primitive", "AVX2", "AVX2 with overload", "Vectorized"};
 
 
 error_code draw_mandelbrot(const Mandelbrot*);
