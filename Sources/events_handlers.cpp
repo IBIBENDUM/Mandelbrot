@@ -63,10 +63,10 @@ static error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
 
     switch(event->key.keysym.sym)
     {
-        case SDLK_a: mandelbrot->screen->pos_x -= KBRD_COORD_STEP; break;
-        case SDLK_d: mandelbrot->screen->pos_x += KBRD_COORD_STEP; break;
         case SDLK_w: mandelbrot->screen->pos_y -= KBRD_COORD_STEP; break;
+        case SDLK_a: mandelbrot->screen->pos_x -= KBRD_COORD_STEP; break;
         case SDLK_s: mandelbrot->screen->pos_y += KBRD_COORD_STEP; break;
+        case SDLK_d: mandelbrot->screen->pos_x += KBRD_COORD_STEP; break;
         case SDLK_b: benchmark_handle(mandelbrot); break;
         case SDLK_l: mandelbrot->show_debug = !mandelbrot->show_debug; break;
         case SDLK_1: mandelbrot->cur_palette    = PALETTE_EVEN; break;
