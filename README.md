@@ -43,7 +43,7 @@ Dependencies:
 
 On `Ubuntu` you can install them with:
 ```
-sudo apt-get install make libsdl2-dev libsdl-ttf2.0-dev
+sudo apt-get install make libsdl2-dev libsdl2-ttf-dev
 ```
 If you are using other Linux distributions you can see how to install them on the internet
 
