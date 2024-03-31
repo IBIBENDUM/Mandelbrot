@@ -86,7 +86,7 @@ inline mmxi_t::mmxi_t (int     val) : m (_mm256_set1_epi32 (val)) {}
 inline mmxf_t operator + (const mmxf_t a, const mmxf_t b) { return _mm256_add_ps(a, b); }
 inline mmxf_t operator - (const mmxf_t a, const mmxf_t b) { return _mm256_sub_ps(a, b); }
 inline mmxf_t operator * (const mmxf_t a, const mmxf_t b) { return _mm256_mul_ps(a, b); }
-inline mmxf_t operator < (const mmxf_t a, const mmxf_t b) { return _mm256_cmp_ps(a, b, _CMP_NGE_UQ); }
+inline mmxf_t operator < (const mmxf_t a, const mmxf_t b) { return _mm256_cmp_ps(a, b, _CMP_LT_OQ); }
 // =============================================================================
 
 static mmxi_t calc_mandelbrot_point_AVX2_overload_ops(const mmxf_t x0, const mmxf_t y0)
@@ -94,7 +94,7 @@ static mmxi_t calc_mandelbrot_point_AVX2_overload_ops(const mmxf_t x0, const mmx
     mmxf_t x = x0;
     mmxf_t y = y0;
 
-    mmxi_t iterations  = 0;
+    mmxi_t iterations  = _mm256_setzero_si256();
 
     for (int i = 0; i < MAX_ITERATION_NUMBER; i++)
     {
@@ -113,6 +113,35 @@ static mmxi_t calc_mandelbrot_point_AVX2_overload_ops(const mmxf_t x0, const mmx
         iterations = _mm256_sub_epi32(iterations, _mm256_castps_si256(cmp_mask));
     }
     return iterations;
+}
+
+error_code calc_mandelbrot_AVX2_overload_ops(const Mandelbrot* mandelbrot)
+{
+    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+
+    Screen*     screen  = mandelbrot->screen;
+    uint32_t* palette =  get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
+    const float coord_x = screen->pos_x - screen->width / 2.0f;
+    const float coord_y = screen->pos_y - screen->height / 2.0f;
+
+    mmxi_t* vmem_buffer = (mmxi_t*) screen->surface->pixels;
+
+    for (int iy = 0; iy < screen->height; iy++)
+    {
+        mmxf_t y0 = (iy + coord_y) / screen->zoom;
+
+        for (int ix = 0; ix < screen->width; ix += PARALLEL_PIXELS_NUMBER)
+        {
+            mmxf_t x0 = (mmxf_t) ((ix + coord_x) / screen->zoom) + mandelbrot->dx;
+            mmxi_t iterations = calc_mandelbrot_point_AVX2_overload_ops(x0, y0);
+
+            mmxi_t colors = _mm256_i32gather_epi32((const int*) palette, iterations, sizeof(uint32_t));
+            _mm256_store_si256((__m256i*)vmem_buffer, colors);
+
+            vmem_buffer++;
+        }
+    }
+    return NO_ERR;
 }
 
 static mmxi_t calc_mandelbrot_point_AVX2(const __m256 x0, const __m256 y0)
