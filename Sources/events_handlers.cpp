@@ -138,6 +138,7 @@ static error_code resize_handler(Mandelbrot* mandelbrot)
     mandelbrot->screen.height = height;
     mandelbrot->screen.width  = width;
     SDL_SetWindowSize(window, width, height);
+    mandelbrot->screen.graphic.surface = SDL_GetWindowSurface(window);
 
     return NO_ERR;
 }
