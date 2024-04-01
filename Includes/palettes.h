@@ -25,11 +25,14 @@ enum Palette
 {
     PALETTE_EVEN,
     PALETTE_LINEAR,
+    PALETTE_LINEAR_ANIMATED,
 };
-const int PALETTES_AMOUNT = 2;
+const int PALETTES_AMOUNT = 3;
 
 #include "mandelbrot_config.h"
 const int COLORS_NUMBER   = MAX_ITERATION_NUMBER + 1;  // Plus one colour for points outside the radius
+
+void update_animated_palette(uint32_t* palettes);
 
 uint32_t* get_cur_palette(uint32_t* palettes, Palette cur_palette);
 

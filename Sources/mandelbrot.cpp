@@ -209,8 +209,7 @@ const float MAX_RADIUS_2_VECT[PARALLEL_PIXELS_NUMBER] = {MAX_RADIUS2,MAX_RADIUS2
         __VA_ARGS__                                     \
     }
 
-
-// BAH: Fix bug
+// BAH: gcc unlike clang couldn't turn this into intrinsics you can write about it in the report
 error_code calc_mandelbrot_vector(const Mandelbrot* mandelbrot)
 {
     Screen*     screen  = mandelbrot->screen;
@@ -254,10 +253,16 @@ error_code calc_mandelbrot_vector(const Mandelbrot* mandelbrot)
                 PARALLEL_INSTRUCTION(mask |= (radius2[i] < MAX_RADIUS_2_VECT[i]) << (PARALLEL_PIXELS_NUMBER - i - 1);)
                 if (!mask) break;
 
+                // PARALLEL_INSTRUCTION(cmp[i] = radius2[i] < MAX_RADIUS_2_VECT[i];)
+                // char mask = 0;
+                // PARALLEL_INSTRUCTION(mask += cmp[i];)
+                // if (!mask) break;
+
                 PARALLEL_INSTRUCTION(x[i] = x0[i] + x2[i] - y2[i];)
                 PARALLEL_INSTRUCTION(y[i] = y0[i] + xy[i] + xy[i];)
 
-                PARALLEL_INSTRUCTION(iterations[i] += (mask >> (PARALLEL_PIXELS_NUMBER - i - 1)) & 0x1;)
+                // PARALLEL_INSTRUCTION(iterations[i] += cmp[i];)
+                PARALLEL_INSTRUCTION(iterations[i] += (mask >> i) & 1;)
             }
 
             PARALLEL_INSTRUCTION(*(vmem_buffer + i) = *(palette + iterations[i]);)

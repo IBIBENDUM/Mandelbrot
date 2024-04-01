@@ -49,11 +49,13 @@ int main()
         if (mandelbrot->show_debug)
             draw_debug_text(mandelbrot);
 
+        if (mandelbrot->cur_palette == PALETTE_LINEAR_ANIMATED)
+            update_animated_palette(mandelbrot->palettes);
+
         SDL_RenderPresent(renderer);
     }
 
     destruct_mandelbrot(mandelbrot);
-
     TTF_CloseFont(font);
     SDL_FreeSurface(rgb_surface);
     SDL_DestroyRenderer(renderer);
