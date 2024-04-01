@@ -7,7 +7,7 @@ DEDFLAGS	:= -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-
 			   -Wformat=2 -Wignored-qualifiers -Wlogical-op -Wno-missing-field-initializers            \
 			   -Wswitch-enum -Wswitch-default -Weffc++ -Wmain -Wextra -Wall -g -pipe                   \
 		 	   -Winline -Wunreachable-code -Wmissing-include-dirs
-CXXFLAGS	:= -mavx -mavx2 -fsanitize=address
+CXXFLAGS	:= -mavx -mavx2 -fsanitize=address -O1
 LDFLAGS		:= $(CXXFLAGS)
 DEPFLAGS	= -MMD -MP -MF $(OUT_NAME)
 LDIBS		:= -lSDL2 -lSDL2_ttf -static-libasan

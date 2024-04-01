@@ -6,7 +6,7 @@ This project lets you interactively explore the mesmerizing **Mandelbrot set**, 
 The project was tested on AMD Ryzen 7 5700U on Linux Mint 21.3
 
 ## Features
-- 2 types of Mandelbrot set calculation methods: **primitive** and using **SIMD** instructions
+- 4 types of Mandelbrot set calculation methods: **primitive**, using **SIMD** instructions, using **Vectorising without SIMD**, using C++ **operators overload**
 - 2 palette types: parity-based and linear gradient
 - Benchmark current calculation method
 ## Control
@@ -21,6 +21,7 @@ The project was tested on AMD Ryzen 7 5700U on Linux Mint 21.3
 - **Switch calculation method**: `Enter`
 - **Toggle debug info**: `L`
 - **Run benchmark**: `B`
+- **Exit**: `Escape`
 
 ## System Requirements
 Your CPU must support **at least** AVX2.
@@ -38,7 +39,7 @@ fi
 ### Prerequisites
 Dependencies:
 - `Make` - build automation tool
-- `SDL2` - Cross-platform, open-source development library
+- `SDL2` - cross-platform, open-source development library
 - `SDL2_ttf` - extension library for SDL2 that specifically deals with font rendering
 
 On `Ubuntu` you can install them with:

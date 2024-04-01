@@ -20,6 +20,26 @@ static void generate_linear_palette(uint32_t* palettes)
         (start.b + i * (end.b - start.b) / COLORS_NUMBER) << BLUE;
 }
 
+#include <math.h>
+
+void update_animated_palette(uint32_t* palettes)
+{
+    color_t start = { .hex = 0xFFFFFF };
+    color_t end   = { .hex = 0x000000 };
+
+    static double offset = 0;
+    offset += 0.03;
+    for (int i = 0; i < COLORS_NUMBER; i++)
+    {
+        float ratio = (i + (sin(offset)) * COLORS_NUMBER) / (COLORS_NUMBER - 1);
+        *(palettes + PALETTE_LINEAR_ANIMATED * COLORS_NUMBER + i) =
+        (char) (start.a * (1 - ratio) + (end.a * ratio)) << ALPHA |
+        (char) (start.r * (1 - ratio) + (end.r * ratio)) << RED   |
+        (char) (start.g * (1 - ratio) + (end.g * ratio)) << GREEN |
+        (char) (start.b * (1 - ratio) + (end.b * ratio)) << BLUE;
+    }
+}
+
 uint32_t* get_palettes()
 {
     uint32_t* palettes = (uint32_t*) calloc(PALETTES_AMOUNT * COLORS_NUMBER, sizeof(palettes[0]));
