@@ -4,13 +4,13 @@
 static void generate_even_palette(uint32_t* palettes)
 {
     for (int i = 0; i < COLORS_NUMBER; i++)
-        *(palettes + PALETTE_EVEN * COLORS_NUMBER + i) = (i % 2) ? 0xFFFFFFFF : 0x00000000;
+        *(palettes + PALETTE_EVEN * COLORS_NUMBER + i) = (i % 2) ? START_COLOR.hex : END_COLOR.hex;
 }
 
 static void generate_linear_palette(uint32_t* palettes)
 {
-    color_t start = { .hex = 0xFFFFFF };
-    color_t end   = { .hex = 0x000000 };
+    color_t start = { .hex = START_COLOR };
+    color_t end   = { .hex = END_COLOR };
 
     for (int i = 0; i < COLORS_NUMBER; i++)
         *(palettes + PALETTE_LINEAR * COLORS_NUMBER + i) =
@@ -24,8 +24,8 @@ static void generate_linear_palette(uint32_t* palettes)
 
 void update_animated_palette(uint32_t* palettes)
 {
-    color_t start = { .hex = 0xFFFFFF };
-    color_t end   = { .hex = 0x000000 };
+    color_t start = { .hex = START_COLOR };
+    color_t end   = { .hex = END_COLOR };
 
     static double offset = 0;
     offset += 0.03;
