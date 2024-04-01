@@ -32,7 +32,7 @@ void update_animated_palette(uint32_t* palettes)
     for (int i = 0; i < COLORS_NUMBER; i++)
     {
         float ratio = (i + (sin(offset)) * COLORS_NUMBER) / (COLORS_NUMBER - 1);
-        *(palettes + PALETTE_LINEAR_ANIMATED * COLORS_NUMBER + i) =
+        *(palettes + PALETTE_ANIMATED * COLORS_NUMBER + i) =
         (char) (start.a * (1 - ratio) + (end.a * ratio)) << ALPHA |
         (char) (start.r * (1 - ratio) + (end.r * ratio)) << RED   |
         (char) (start.g * (1 - ratio) + (end.g * ratio)) << GREEN |
