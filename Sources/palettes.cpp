@@ -27,11 +27,12 @@ void update_animated_palette(uint32_t* palettes)
     color_t start = { .hex = 0xFFFFFF };
     color_t end   = { .hex = 0x000000 };
 
-    static double offset = 0;
-    offset += 0.03;
+    static int offset = 0;
+    offset += 1;
+
     for (int i = 0; i < COLORS_NUMBER; i++)
     {
-        float ratio = (i + (sin(offset)) * COLORS_NUMBER) / (COLORS_NUMBER - 1);
+        int ratio = ((i + offset) % 10);
         *(palettes + PALETTE_ANIMATED * COLORS_NUMBER + i) =
         (char) (start.a * (1 - ratio) + (end.a * ratio)) << ALPHA |
         (char) (start.r * (1 - ratio) + (end.r * ratio)) << RED   |
