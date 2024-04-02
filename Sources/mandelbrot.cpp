@@ -101,10 +101,15 @@ error_code process_mandelbrot(Mandelbrot* mandelbrot)
 
     clock_t tic_start = clock();
     if (draw_mandelbrot(mandelbrot) != NO_ERR) mandelbrot->is_running == false;
+    //  ^~~~~~~~~~~~~~~ TODO: doesn't seem all that important doesn't it, let's shove it in the if
+    //                  TODO: what did it do? It draws what where?
     clock_t tic_end = clock();
     mandelbrot->screen.ticks = tic_end - tic_start;
 
+    // TODO: This all looks like an intertwined mess of SDL and non-SDL functions
     SDL_Texture* rgb_texture  = SDL_CreateTextureFromSurface(renderer, surface);
+    //                       ^ TODO: what is this space
+
     SDL_RenderCopy(renderer, rgb_texture, NULL, NULL);
     SDL_DestroyTexture(rgb_texture);
 
