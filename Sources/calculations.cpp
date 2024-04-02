@@ -213,7 +213,6 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
 
 // = Vectorized without SIMD implementation ====================================
 
-
 #define PARALLEL_INSTRUCTION_                           \
     for (size_t i = 0; i < PARALLEL_PIXELS_NUMBER; i++) \
 
