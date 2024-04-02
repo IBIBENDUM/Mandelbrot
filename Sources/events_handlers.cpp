@@ -15,7 +15,7 @@ static error_code update_zoom(Mandelbrot* mandelbrot, int x, int y, float zoom)
     mandelbrot->screen.pos_x = x;
     mandelbrot->screen.pos_y = y;
     mandelbrot->screen.zoom  = zoom;
-    mandelbrot->dx            = _mm256_mul_ps(_mm256_set1_ps(1 / zoom), DX_FACTOR);
+    mandelbrot->dx           = _mm256_mul_ps(_mm256_set1_ps(1 / zoom), DX_FACTOR);
 
     return NO_ERR;
 }
@@ -62,6 +62,7 @@ static error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
 {
     RET_IF_ERR(event && mandelbrot, NULL_PTR_ERR);
 
+    // TODO: At least align this...
     switch(event->key.keysym.sym)
     {
         case SDLK_w: mandelbrot->screen.pos_y -= KBRD_COORD_STEP; break;
@@ -127,6 +128,7 @@ static error_code movement_handler(SDL_Event* event, Screen* screen)
 
 static error_code resize_handler(Mandelbrot* mandelbrot)
 {
+    // TODO: Your resize doesn't work in the least...
     RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
 
     int width = 0;
@@ -172,7 +174,7 @@ error_code handle_events(Mandelbrot* mandelbrot)
             }
             case SDL_WINDOWEVENT: {
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-                    resize_handler(mandelbrot);   // BAH: Fix resize bug
+                    resize_handler(mandelbrot);   // BAH: Fix resize bug TODO: Yeah, fix it or remove it
                 break;
             }
             default: break;

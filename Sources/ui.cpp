@@ -6,6 +6,8 @@
 #include "calculations.h"
 #include "benchmark.h"
 
+// TODO: Just messy
+
 const size_t DEBUG_BUF_SIZE = 100;
 
 error_code draw_text_with_bg(Mandelbrot* mandelbrot, const char* text, int x, int y, int width)

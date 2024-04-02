@@ -3,9 +3,11 @@
 
 enum error_code
 {
-    NO_ERR,
+    NO_ERR, // TODO: NO_ERR == 0?? Then what about ERR
     NULL_PTR_ERR,
     SDL_ERR,
+
+    // No other errors spotted...
 };
 
 #endif

@@ -8,9 +8,35 @@ const int PARALLEL_PIXELS_NUMBER = 8; // Number of pixels processed in parallel
 // BAH: HELP ME!
 const float MAX_RADIUS_2_VECT[PARALLEL_PIXELS_NUMBER] =
 {
+
+    // #define _1 MAX_RADIUS2 TODO: this ain't no better, but much funnier and "efficient"
+    // #define _2 _1, _1
+    // #define _3 _2, _2
+    // #define _4 _3, _3
+    // _4
     MAX_RADIUS2, MAX_RADIUS2, MAX_RADIUS2, MAX_RADIUS2,
     MAX_RADIUS2, MAX_RADIUS2, MAX_RADIUS2, MAX_RADIUS2
 };
+
+// TODO: funny way to do it:
+// void foo() __attribute__((constructor)) { memset(MAX_RADIUS_2_VECT, MAX_RADIUS2, sizeof(MAX_RADIUS_2_VECT) / sizeof(*MAX_RADIUS_2_VECT)); }
+
+// TODO: all you could all in on newer C++ features
+// template <typename type, size_t size>
+// struct array_wrapper {
+//     type array[size];
+// };
+// 
+// template <typename type, size_t size>
+// consteval array_wrapper<type, size> fill_array(auto &&value) {
+//     array_wrapper<type, size> array;
+//     for (auto& element: array.array)
+//         element = std::forward<decltype(value)>(value);
+//     return array;
+// }
+// 
+// constexpr const auto my_array = fill_array<float, PARALLEL_PIXELS_NUMER>(MAX_RADIUS2);
+
 
 // = Primitive implementation ==================================================
 
@@ -77,7 +103,7 @@ union mmxf_t
     operator mmxi_t() const;
 };
 
-union mmxi_t
+union mmxi_t // TODO: learn how to make operator overloadings faster (use cppinsights, look at clang ast, optview2, godbolt)
 {
     __m256i m;
     mmxi_t (__m256i val);
@@ -122,7 +148,7 @@ static mmxi_t calc_mandelbrot_point_AVX2_overload_ops(const mmxf_t x0, const mmx
     return iterations;
 }
 
-error_code calc_mandelbrot_AVX2_overload_ops(const Mandelbrot* mandelbrot)
+error_code calc_mandelbrot_AVX2_overload_ops(const Mandelbrot* mandelbrot) // TODO: fix it
 {
     RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
 
@@ -216,29 +242,34 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
         __VA_ARGS__                                     \
     }
 
+// TODO: consider this approach:
+#define PARALLEL_INSTRUCTION_                         \
+    for (size_t i = 0; i < PARALLEL_PIXELS_NUMBER; i++) \
+
 // BAH: gcc unlike clang couldn't turn this into intrinsics you can write about it in the report
 error_code calc_mandelbrot_vector(const Mandelbrot* mandelbrot)
 {
-    Screen     screen  = mandelbrot->screen;
-    uint32_t* palette =  get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
-    const float coord_x = screen.pos_x - screen.width / 2.0f;
-    const float coord_y = screen.pos_y - screen.height / 2.0f;
+    Screen     screen    = mandelbrot->screen;
+    uint32_t* palette    =  get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
+    const float coord_x  = screen.pos_x - screen.width / 2.0f;
+    const float coord_y  = screen.pos_y - screen.height / 2.0f;
 
    uint32_t* vmem_buffer = (uint32_t*) screen.graphic.surface->pixels;
 
-    float y0[PARALLEL_PIXELS_NUMBER] = {};
-    float x0[PARALLEL_PIXELS_NUMBER] = {};
-    float x[PARALLEL_PIXELS_NUMBER] = {};
-    float y[PARALLEL_PIXELS_NUMBER] = {};
+    // TODO: C89 (after hoisting it will be the same)
+    float y0[PARALLEL_PIXELS_NUMBER]      = {};
+    float x0[PARALLEL_PIXELS_NUMBER]      = {};
+    float x[PARALLEL_PIXELS_NUMBER]       = {};
+    float y[PARALLEL_PIXELS_NUMBER]       = {};
     float x2[PARALLEL_PIXELS_NUMBER]      = {};
     float y2[PARALLEL_PIXELS_NUMBER]      = {};
     float xy[PARALLEL_PIXELS_NUMBER]      = {};
     float radius2[PARALLEL_PIXELS_NUMBER] = {};
-    int cmp[PARALLEL_PIXELS_NUMBER]      = {};
+    int cmp[PARALLEL_PIXELS_NUMBER]       = {};
 
     for (int iy = 0; iy < screen.height; iy++)
     {
-        PARALLEL_INSTRUCTION(y0[i] =  (iy + coord_y) / screen.zoom;)
+        PARALLEL_INSTRUCTION_{y0[i] =  (iy + coord_y) / screen.zoom;}
 
         for (int ix = 0; ix < screen.width; ix += PARALLEL_PIXELS_NUMBER)
         {
@@ -279,4 +310,5 @@ error_code calc_mandelbrot_vector(const Mandelbrot* mandelbrot)
     return NO_ERR;
 }
 
+// You make me proud!
 #undef PARALLEL_INSTRUCTION

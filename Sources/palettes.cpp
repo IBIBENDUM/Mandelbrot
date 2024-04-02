@@ -1,4 +1,6 @@
 #include <malloc.h>
+#include <math.h>
+
 #include "palettes.h"
 
 static void generate_even_palette(uint32_t* palettes)
@@ -9,8 +11,13 @@ static void generate_even_palette(uint32_t* palettes)
 
 static void generate_linear_palette(uint32_t* palettes)
 {
+<<<<<<< HEAD
     color_t start = { .hex = 0xFFFFFF };
     color_t end   = { .hex = 0x000000 };
+=======
+    color_t start = START_COLOR;
+    color_t end   = END_COLOR;
+>>>>>>> 248d2ea (review: report many problems and suggest many improvements)
 
     for (int i = 0; i < COLORS_NUMBER; i++)
         *(palettes + PALETTE_LINEAR * COLORS_NUMBER + i) =
@@ -20,15 +27,11 @@ static void generate_linear_palette(uint32_t* palettes)
         (start.b + i * (end.b - start.b) / COLORS_NUMBER) << BLUE;
 }
 
-#include <math.h>
 
 void update_animated_palette(uint32_t* palettes)
 {
-    color_t start = { .hex = 0xFFFFFF };
-    color_t end   = { .hex = 0x000000 };
-
-    static int offset = 0;
-    offset += 1;
+    color_t start = START_COLOR;
+    color_t end   = END_COLOR;
 
     for (int i = 0; i < COLORS_NUMBER; i++)
     {

@@ -24,12 +24,14 @@ struct Screen
     int       height;
     int       width;
 
-    int       pos_x;
+    // -------------
+    int       pos_x; // TODO: OF SCREEN??
     int       pos_y;
 
     double    zoom;
+    // ------------- TODO: this are two different entities
 
-    size_t ticks;
+    size_t ticks; // TODO: frames?
 };
 
 struct Mandelbrot
@@ -38,15 +40,18 @@ struct Mandelbrot
     bool      show_debug;
     bool      show_help;
 
-    Calc_implement      cur_calc;
-    calc_implement_func calc_func;
+    // TODO: separate in a struct
+    Calc_implement      cur_calc; // TODO: cur? cur cur /current_calculation_method/ ? (naming)
+    calc_implement_func calc_func; // TODO: /calculate/ mandelbrot->calculate(&mandelbrot);
+                                   //       or even better mandelbrot->method.calculate(&mandelbrot) and
+                                   //                      mandelbrot->method.id
 
     Screen  screen;
 
-    Palette   cur_palette;
+    Palette   cur_palette; // TODO: cur_
     uint32_t* palettes;
 
-    __m256    dx;
+    __m256    dx; // TODO: What is this, as far as I know not all your backends use avx instructions so no reason for it here
 };
 
 error_code init_mandelbrot(Mandelbrot*);
