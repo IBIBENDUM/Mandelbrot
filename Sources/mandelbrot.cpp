@@ -71,7 +71,6 @@ error_code init_mandelbrot(Mandelbrot* mandelbrot)
         .screen      = screen,
         .cur_palette = DEFAULT_PALETTE,
         .palettes    = palettes,
-        .dx          = _mm256_mul_ps(_mm256_set1_ps(1 / DEFAULT_ZOOM), DX_FACTOR)
     };
 
     return NO_ERR;

@@ -61,94 +61,110 @@ error_code calc_mandelbrot_primitive(const Mandelbrot* mandelbrot)
             vmem_buffer++;
         }
     }
-
     return NO_ERR;
 }
 
-// = AVX2 with overloaded operators implementation =============================
+// // = AVX2 with overloaded operators implementation =============================
 
-// union mmxi_t;
-//
-// union mmxf_t
-// {
-//     __m256 m;
-//     mmxf_t (__m256 val);
-//     mmxf_t (float val);
-//     operator __m256() const {return m; };
-//     operator mmxi_t() const;
-// };
-//
-// union mmxi_t // TODO: learn how to make operator overloadings faster (use cppinsights, look at clang ast, optview2, godbolt)
-// {
-//     __m256i m;
-//     mmxi_t (__m256i val);
-//     mmxi_t (int val);
-//     operator __m256i() const {return m; };
-// };
-//
-// inline mmxf_t::mmxf_t (__m256 val)  : m (val) {}
-// inline mmxf_t::mmxf_t (float  val)  : m (_mm256_set1_ps (val)) {}
-//
-// inline mmxi_t::mmxi_t (__m256i val) : m (val) {}
-// inline mmxi_t::mmxi_t (int     val) : m (_mm256_set1_epi32 (val)) {}
-//
-// inline mmxf_t operator + (const mmxf_t a, const mmxf_t b) { return _mm256_add_ps(a, b); }
-// inline mmxf_t operator - (const mmxf_t a, const mmxf_t b) { return _mm256_sub_ps(a, b); }
-// inline mmxf_t operator * (const mmxf_t a, const mmxf_t b) { return _mm256_mul_ps(a, b); }
-// inline mmxf_t operator < (const mmxf_t a, const mmxf_t b) { return _mm256_cmp_ps(a, b, _CMP_LT_OQ); }
-//
-// static mmxi_t calc_mandelbrot_point_AVX2_overload_ops(const mmxf_t x0, const mmxf_t y0)
-// {
-//     mmxf_t x = x0;
-//     mmxf_t y = y0;
-//
-//     mmxi_t iterations  = _mm256_setzero_si256();
-//
-//     for (int i = 0; i < MAX_ITERATION_NUMBER; i++)
-//     {
-//         const mmxf_t x2 = x * x;
-//         const mmxf_t y2 = y * y;
-//         const mmxf_t xy = x * y;
-//         const mmxf_t radius2 = x2 + y2;
-//
-//         const mmxf_t cmp_mask = radius2 < MAX_RADIUS_2_256;
-//         if (_mm256_testz_ps(cmp_mask, cmp_mask))
-//             break;
-//
-//         y = xy + xy + y0;
-//         x = x2 - y2 + x0;
-//
-//         iterations = _mm256_sub_epi32(iterations, _mm256_castps_si256(cmp_mask));
-//     }
-//     return iterations;
-// }
+union mmxi_t;
 
-error_code calc_mandelbrot_AVX2_overload_ops(const Mandelbrot* mandelbrot) // TODO: fix it
+union mmxf_t
 {
-//     RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
-//
-//     Screen     screen  = mandelbrot->screen;
-//     uint32_t* palette =  get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
-//     const float coord_x = screen.pos_x - screen.width / 2.0f;
-//     const float coord_y = screen.pos_y - screen.height / 2.0f;
-//
-//     mmxi_t* vmem_buffer = (mmxi_t*) screen.graphic.surface->pixels;
-//
-//     for (int iy = 0; iy < screen.height; iy++)
-//     {
-//         mmxf_t y0 = (iy + coord_y) / screen.zoom;
-//
-//         for (int ix = 0; ix < screen.width; ix += PARALLEL_PIXELS_NUMBER)
-//         {
-//             mmxf_t x0 = (mmxf_t) ((ix + coord_x) / screen.zoom) + mandelbrot->dx;
-//             mmxi_t iterations = calc_mandelbrot_point_AVX2_overload_ops(x0, y0);
-//
-//             mmxi_t colors = _mm256_i32gather_epi32((const int*) palette, iterations, sizeof(uint32_t));
-//             _mm256_store_si256((__m256i*)vmem_buffer, colors);
-//
-//             vmem_buffer++;
-//         }
-//     }
+    __m256 m;
+    mmxf_t (__m256 val);
+    mmxf_t (float val);
+    mmxf_t (double val);
+    operator __m256() const;
+    operator mmxi_t() const;
+};
+
+union mmxi_t
+{
+    __m256i m;
+    mmxi_t (__m256i val);
+    mmxi_t (int val);
+    operator __m256i() const {return m; };
+    mmxi_t() : m(_mm256_setzero_si256()) {}
+};
+
+inline mmxf_t::mmxf_t (__m256 val)  : m (val) {}
+inline mmxf_t::mmxf_t (float  val)  : m (_mm256_set1_ps (val)) {}
+inline mmxf_t::mmxf_t (double  val) : m (_mm256_set1_ps ((float)val)) {}
+
+inline mmxf_t::operator __m256() const { return m; }
+inline mmxf_t::operator mmxi_t() const { return mmxi_t (_mm256_castps_si256(m)); };
+
+inline mmxi_t::mmxi_t (__m256i val) : m (val) {}
+
+inline mmxf_t operator + (const mmxf_t& a, const mmxf_t& b) { return _mm256_add_ps(a, b);             }
+inline mmxf_t operator - (const mmxf_t& a, const mmxf_t& b) { return _mm256_sub_ps(a, b);             }
+inline mmxf_t operator * (const mmxf_t& a, const mmxf_t& b) { return _mm256_mul_ps(a, b);             }
+inline mmxf_t operator / (const mmxf_t& a, const mmxf_t& b) { return _mm256_div_ps(a, b);             }
+inline mmxf_t operator < (const mmxf_t& a, const mmxf_t& b) { return _mm256_cmp_ps(a, b, _CMP_LT_OQ); }
+inline bool   operator ! (const mmxf_t& a)                  { return _mm256_testz_ps(a, a);           }
+
+inline mmxi_t operator -= (mmxi_t& a, const mmxi_t& b) { a = _mm256_sub_epi32(a, b); return a; }
+inline mmxi_t gather_array(const void* src, const mmxi_t& dest)
+{
+  return _mm256_i32gather_epi32(src, dest, sizeof(uint32_t));
+}
+inline void store_array(const mmxi_t& src, void* dest)
+{
+  _mm256_store_si256((__m256i*)dest, src);
+}
+
+static mmxi_t calc_mandelbrot_point_AVX2_overload_ops(const mmxf_t x0, const mmxf_t y0)
+{
+    mmxf_t x = x0;
+    mmxf_t y = y0;
+
+    mmxi_t iterations; // iterations == 0 by default;
+
+    for (int i = 0; i < MAX_ITERATION_NUMBER; i++)
+    {
+        const mmxf_t x2 = x * x;
+        const mmxf_t y2 = y * y;
+        const mmxf_t xy = x * y;
+        const mmxf_t radius2 = x2 + y2;
+
+        const mmxf_t cmp_mask = radius2 < (mmxf_t) MAX_RADIUS_2_256;
+        if (!cmp_mask)
+            break;
+
+        y = xy + xy + y0;
+        x = x2 - y2 + x0;
+
+        iterations -= cmp_mask; // Each cmp_mask element is equals 0 or F...Fh = -1d
+    }
+    return iterations;
+}
+
+error_code calc_mandelbrot_AVX2_overload_ops(const Mandelbrot* mandelbrot)
+{
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
+
+    uint32_t*    palette     = get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
+    Screen       screen      = mandelbrot->screen;
+    mmxi_t*      vmem_buffer = (mmxi_t*) screen.graphic.surface->pixels;
+    const float  coord_x     = screen.pos_x - screen.width  / 2.0f;
+    const float  coord_y     = screen.pos_y - screen.height / 2.0f;
+    const mmxf_t dx          = DX_FACTOR / (float) screen.zoom;     // BAH: why can't it convert double to mmxf_t?
+
+    for (int iy = 0; iy < screen.height; iy++)
+    {
+        mmxf_t y0 = (iy + coord_y) / screen.zoom;
+
+        for (int ix = 0; ix < screen.width; ix += PARALLEL_PIXELS_NUMBER)
+        {
+            mmxf_t x0 = ((ix + coord_x) / screen.zoom) + dx;
+            mmxi_t iterations = calc_mandelbrot_point_AVX2_overload_ops(x0, y0);
+
+            mmxi_t colors = gather_array(palette, iterations);
+            store_array(colors, vmem_buffer);
+
+            vmem_buffer++;
+        }
+    }
     return NO_ERR;
 }
 
@@ -184,12 +200,12 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
 {
     RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
-    Screen     screen  = mandelbrot->screen;
-    uint32_t* palette =  get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
-    const float coord_x = screen.pos_x - screen.width / 2.0f;
-    const float coord_y = screen.pos_y - screen.height / 2.0f;
-
-    __m256i* vmem_buffer = (__m256i*) screen.graphic.surface->pixels;
+    uint32_t*    palette     = get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
+    Screen       screen      = mandelbrot->screen;
+    __m256i*     vmem_buffer = (__m256i*) screen.graphic.surface->pixels;
+    const float  coord_x     = screen.pos_x - screen.width  / 2.0f;
+    const float  coord_y     = screen.pos_y - screen.height / 2.0f;
+    const __m256 dx          = _mm256_mul_ps(_mm256_set1_ps(1 / DEFAULT_ZOOM), DX_FACTOR);
 
     for (int iy = 0; iy < screen.height; iy++)
     {
@@ -198,7 +214,7 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
         for (int ix = 0; ix < screen.width; ix += PARALLEL_PIXELS_NUMBER)
         {
             __m256 x0 = _mm256_set1_ps(((float)ix + coord_x) / screen.zoom);
-            x0 = _mm256_add_ps(x0, mandelbrot->dx);
+            x0 = _mm256_add_ps(x0, dx);
 
             __m256i iterations = calc_mandelbrot_point_AVX2(x0, y0);
 
@@ -216,11 +232,10 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
 #define PARALLEL_INSTRUCTION_                           \
     for (size_t i = 0; i < PARALLEL_PIXELS_NUMBER; i++) \
 
-#define INIT_VECTOR(NAME, ...)              \
-    float NAME[PARALLEL_PIXELS_NUMBER] = {}; \
+#define INIT_VECTOR(NAME, ...)                          \
+    float NAME[PARALLEL_PIXELS_NUMBER] = {};            \
     PARALLEL_INSTRUCTION_ NAME[i] = __VA_ARGS__;
 
-// BAH: gcc unlike clang couldn't turn this into intrinsics you can write about it in the report
 error_code calc_mandelbrot_vector(const Mandelbrot* mandelbrot)
 {
     uint32_t*   palette     = get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
