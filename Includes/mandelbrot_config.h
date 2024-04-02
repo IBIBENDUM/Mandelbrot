@@ -25,6 +25,9 @@ const float          MAX_RADIUS2          = 4;
 
 #include "palettes.h"
 const Palette        DEFAULT_PALETTE      = PALETTE_EVEN;
+const color_t        START_COLOR          = { .hex = 0xFFFFFF };
+const color_t        END_COLOR            = { .hex = 0x000000 };
+const double         ANIMATION_SPEED      = 50;
 
 #include "calculations.h"
 const Calc_implement DEFAULT_CALC_FUNC    = CALC_PRIMITIVE;

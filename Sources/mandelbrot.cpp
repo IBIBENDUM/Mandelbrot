@@ -133,8 +133,9 @@ error_code process_mandelbrot(Mandelbrot* mandelbrot)
         draw_debug_text(mandelbrot);
 
     if (mandelbrot->cur_palette == PALETTE_ANIMATED)
-        update_animated_palette(mandelbrot->palettes);
-
+    {
+        update_animated_palette(mandelbrot);
+    }
     SDL_RenderPresent(renderer);
 
     return NO_ERR;

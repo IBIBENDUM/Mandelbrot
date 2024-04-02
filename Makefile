@@ -9,12 +9,12 @@ DEDFLAGS	:=	-Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-
 				-Wswitch-enum -Wswitch-default -Weffc++ -Wmain -Wextra -Wall -g -pipe					\
 				-Winline -Wunreachable-code -Wmissing-include-dirs
 
-CXXFLAGS	=	-mavx -mavx2 -fsanitize=address -O3 -fsave-optimization-record
+CXXFLAGS	=	-mavx -mavx2 -O3 -fsave-optimization-record
 
 GCC_FLAGS			:=
-GCC_DEBUG_FLAGS		:= -g3
+GCC_DEBUG_FLAGS		:= -fsanitize=address -g3
 CLANG_FLAGS			:= -stdlib=libc++
-CLANG_DEBUG_FLAGS	:= -g
+CLANG_DEBUG_FLAGS	:= -fsanitize=address -g
 
 ifeq ($(CXX), g++)
 	CXXFLAGS += $(GCC_FLAGS)

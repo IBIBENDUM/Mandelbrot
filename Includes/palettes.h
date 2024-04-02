@@ -32,7 +32,7 @@ const int PALETTES_AMOUNT = sizeof(Palette);
 #include "mandelbrot_config.h"
 const int COLORS_NUMBER = MAX_ITERATION_NUMBER + 1;  // Plus one colour for points outside the radius
 
-void update_animated_palette(uint32_t* palettes);
+void update_animated_palette(Mandelbrot*);
 
 uint32_t* get_cur_palette(uint32_t* palettes, Palette cur_palette);
 
