@@ -14,23 +14,25 @@
 
 error_code init_graphic(Graphic* graphic)
 {
-    RET_IF_ERR(graphic, NULL_PTR_ERR);
+    RETURN_IF_NULL(graphic, NULL_PTR_ERR);
 
-    RET_IF_ERR(!SDL_Init(SDL_INIT_VIDEO), SDL_ERR);
-    RET_IF_ERR(!TTF_Init(), SDL_ERR);
+    RETURN_IF_NULL(!SDL_Init(SDL_INIT_VIDEO), SDL_ERR);
+    RETURN_IF_NULL(!TTF_Init(), SDL_ERR);
 
-    SDL_Window* window = NULL;
+    SDL_Window*   window   = NULL;
     SDL_Renderer* renderer = NULL;
 
     SDL_CreateWindowAndRenderer(WINDOW_WIDTH, WINDOW_HEIGHT, 0, &window, &renderer);
-    RET_IF_ERR(window && renderer, NULL_PTR_ERR);
-    RET_IF_ERR(!SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND), SDL_ERR);
+    RETURN_IF_NULL(window && renderer, NULL_PTR_ERR);
 
-    SDL_Surface* surface = SDL_CreateRGBSurface(0, WINDOW_WIDTH, WINDOW_HEIGHT, COLOR_DEPTH, 0, 0, 0, 0);
-    RET_IF_ERR(surface, NULL_PTR_ERR);
+    RETURN_IF_NULL(!SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND), SDL_ERR);
+
+    SDL_Surface* surface = SDL_CreateRGBSurface(0, WINDOW_WIDTH, WINDOW_HEIGHT,
+                                                COLOR_DEPTH, 0, 0, 0, 0);
+    RETURN_IF_NULL(surface, NULL_PTR_ERR);
 
     TTF_Font* font = TTF_OpenFont(WINDOW_FONT, WINDOW_FONT_SIZE);
-    RET_IF_ERR(font, NULL_PTR_ERR);
+    RETURN_IF_NULL(font, NULL_PTR_ERR);
 
     *graphic = (Graphic)
     {
@@ -44,10 +46,10 @@ error_code init_graphic(Graphic* graphic)
 
 error_code init_mandelbrot(Mandelbrot* mandelbrot)
 {
-    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
     Graphic graphic = {};
-    RET_IF_ERR(!init_graphic(&graphic), SDL_ERR);
+    RETURN_IF_NULL(!init_graphic(&graphic), SDL_ERR);
 
     Screen screen =
     {
@@ -77,7 +79,7 @@ error_code init_mandelbrot(Mandelbrot* mandelbrot)
 
 error_code destruct_mandelbrot(Mandelbrot* mandelbrot)
 {
-    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
     free(mandelbrot->palettes);
 
@@ -90,28 +92,43 @@ error_code destruct_mandelbrot(Mandelbrot* mandelbrot)
     return NO_ERR;
 }
 
+static error_code draw_mandelbrot(Mandelbrot* mandelbrot)
+{
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
+
+    SDL_Renderer* renderer = mandelbrot->screen.graphic.renderer;
+    SDL_Surface*  surface  = mandelbrot->screen.graphic.surface;
+
+    RETURN_IF_NULL(!SDL_LockSurface(surface), SDL_ERR);
+
+    SDL_Texture* rgb_texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    clock_t tic_start = clock();
+
+    mandelbrot->calc_func(mandelbrot);
+
+    clock_t tic_end = clock();
+    mandelbrot->screen.ticks = tic_end - tic_start;
+
+    SDL_RenderCopy(renderer, rgb_texture, NULL, NULL);
+    SDL_DestroyTexture(rgb_texture);
+
+    SDL_UnlockSurface(surface);
+
+    return NO_ERR;
+}
+
 error_code process_mandelbrot(Mandelbrot* mandelbrot)
 {
-    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
     SDL_Renderer* renderer = mandelbrot->screen.graphic.renderer;
     SDL_Surface*  surface  = mandelbrot->screen.graphic.surface;
 
     handle_events(mandelbrot);
 
-    clock_t tic_start = clock();
-    if (draw_mandelbrot(mandelbrot) != NO_ERR) mandelbrot->is_running == false;
-    //  ^~~~~~~~~~~~~~~ TODO: doesn't seem all that important doesn't it, let's shove it in the if
-    //                  TODO: what did it do? It draws what where?
-    clock_t tic_end = clock();
-    mandelbrot->screen.ticks = tic_end - tic_start;
-
-    // TODO: This all looks like an intertwined mess of SDL and non-SDL functions
-    SDL_Texture* rgb_texture  = SDL_CreateTextureFromSurface(renderer, surface);
-    //                       ^ TODO: what is this space
-
-    SDL_RenderCopy(renderer, rgb_texture, NULL, NULL);
-    SDL_DestroyTexture(rgb_texture);
+    if (draw_mandelbrot(mandelbrot) != NO_ERR)
+        mandelbrot->is_running = false;
 
     if (mandelbrot->show_debug)
         draw_debug_text(mandelbrot);
@@ -120,19 +137,6 @@ error_code process_mandelbrot(Mandelbrot* mandelbrot)
         update_animated_palette(mandelbrot->palettes);
 
     SDL_RenderPresent(renderer);
-
-    return NO_ERR;
-}
-
-error_code draw_mandelbrot(const Mandelbrot* mandelbrot)
-{
-    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
-
-    RET_IF_ERR(!SDL_LockSurface(mandelbrot->screen.graphic.surface), SDL_ERR);
-
-    mandelbrot->calc_func(mandelbrot);
-
-    SDL_UnlockSurface(mandelbrot->screen.graphic.surface);
 
     return NO_ERR;
 }

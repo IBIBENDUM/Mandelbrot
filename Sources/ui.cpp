@@ -12,7 +12,7 @@ const size_t DEBUG_BUF_SIZE = 100;
 
 error_code draw_text_with_bg(Mandelbrot* mandelbrot, const char* text, int x, int y, int width)
 {
-    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
     SDL_Renderer* renderer = mandelbrot->screen.graphic.renderer;
     TTF_Font* font = mandelbrot->screen.graphic.font;
@@ -20,7 +20,7 @@ error_code draw_text_with_bg(Mandelbrot* mandelbrot, const char* text, int x, in
     SDL_Surface* text_surface = TTF_RenderText_Blended_Wrapped(font, text,
                                                                WINDOW_FONT_COLOR,
                                                                width);
-    RET_IF_ERR(text_surface, NULL_PTR_ERR);
+    RETURN_IF_NULL(text_surface, NULL_PTR_ERR);
 
     int text_w   = text_surface->w;
     int text_h   = text_surface->h;
@@ -69,7 +69,7 @@ error_code draw_benchmark_results(Mandelbrot* mandelbrot, int tics_amount)
 
 error_code draw_debug_text(Mandelbrot* mandelbrot)
 {
-    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
     SDL_Renderer* renderer = mandelbrot->screen.graphic.renderer;
     TTF_Font* font = mandelbrot->screen.graphic.font;

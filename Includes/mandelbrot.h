@@ -17,6 +17,13 @@ struct Graphic
     TTF_Font*     font;
 };
 
+struct Camera
+{
+    int    pos_x;
+    int    pox_y;
+    double zoom;
+};
+
 struct Screen
 {
     Graphic   graphic;
@@ -32,6 +39,11 @@ struct Screen
     // ------------- TODO: this are two different entities
 
     size_t ticks; // TODO: frames?
+};
+
+struct Method
+{
+
 };
 
 struct Mandelbrot
@@ -59,9 +71,6 @@ error_code init_mandelbrot(Mandelbrot*);
 error_code destruct_mandelbrot(Mandelbrot*);
 
 error_code process_mandelbrot(Mandelbrot*);
-
-error_code draw_mandelbrot(const Mandelbrot*);
-
 
 #endif // MANDELBROT_H_
 

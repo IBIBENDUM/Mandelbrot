@@ -10,7 +10,7 @@
 
 static error_code update_zoom(Mandelbrot* mandelbrot, int x, int y, float zoom)
 {
-    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
     mandelbrot->screen.pos_x = x;
     mandelbrot->screen.pos_y = y;
@@ -22,7 +22,7 @@ static error_code update_zoom(Mandelbrot* mandelbrot, int x, int y, float zoom)
 
 static error_code benchmark_handle(Mandelbrot* mandelbrot)
 {
-    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
     SDL_Renderer* renderer =  mandelbrot->screen.graphic.renderer;
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -60,7 +60,7 @@ static error_code benchmark_handle(Mandelbrot* mandelbrot)
 
 static error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
 {
-    RET_IF_ERR(event && mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(event && mandelbrot, NULL_PTR_ERR);
 
     // TODO: At least align this...
     switch(event->key.keysym.sym)
@@ -88,7 +88,7 @@ static error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
 
 static error_code scroll_handler(SDL_Event* event, Mandelbrot* mandelbrot)
 {
-    RET_IF_ERR(event && mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(event && mandelbrot, NULL_PTR_ERR);
 
     Screen screen = mandelbrot->screen;
 
@@ -118,7 +118,7 @@ static error_code scroll_handler(SDL_Event* event, Mandelbrot* mandelbrot)
 
 static error_code movement_handler(SDL_Event* event, Screen* screen)
 {
-    RET_IF_ERR(event && screen, NULL_PTR_ERR);
+    RETURN_IF_NULL(event && screen, NULL_PTR_ERR);
 
     screen->pos_x -= event->motion.xrel;
     screen->pos_y -= event->motion.yrel;
@@ -129,7 +129,7 @@ static error_code movement_handler(SDL_Event* event, Screen* screen)
 static error_code resize_handler(Mandelbrot* mandelbrot)
 {
     // TODO: Your resize doesn't work in the least...
-    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
     int width = 0;
     int height = 0;
@@ -147,7 +147,7 @@ static error_code resize_handler(Mandelbrot* mandelbrot)
 
 error_code handle_events(Mandelbrot* mandelbrot)
 {
-    RET_IF_ERR(mandelbrot, NULL_PTR_ERR);
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
     SDL_Event event = {};
 

@@ -1,7 +1,7 @@
 #ifndef PALETTES_H_
 #define PALETTES_H_
 
-#include <cstdint>
+#include <stdint.h>
 
 const char ALPHA = 24;
 const char RED   = 16;
