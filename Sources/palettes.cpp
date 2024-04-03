@@ -11,13 +11,8 @@ static void generate_even_palette(uint32_t* palettes)
 
 static void generate_linear_palette(uint32_t* palettes)
 {
-<<<<<<< HEAD
-    color_t start = { .hex = 0xFFFFFF };
-    color_t end   = { .hex = 0x000000 };
-=======
     color_t start = START_COLOR;
     color_t end   = END_COLOR;
->>>>>>> 248d2ea (review: report many problems and suggest many improvements)
 
     for (int i = 0; i < COLORS_NUMBER; i++)
         *(palettes + PALETTE_LINEAR * COLORS_NUMBER + i) =

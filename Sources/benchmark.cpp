@@ -15,6 +15,7 @@ int benchmark_function(Mandelbrot* mandelbrot)
     clock_t tic_end = clock();
     tics_amount = tic_end - tic_start;
 
+    printf("Calculation method: %s\n", METHODS_NAMES[mandelbrot->method.id]);
     printf("Ticks: %zu\n", tics_amount);
     printf("Ticks per call: %lf\n", tics_amount / (float) FUNCTIONS_RUNS_NUMBER);
 

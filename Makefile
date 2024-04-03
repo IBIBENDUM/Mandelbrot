@@ -1,6 +1,6 @@
 include colors.mk
 
-CXX 		:=	clang++
+CXX 		:=	g++
 DEDFLAGS	:=	-Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal				\
 				-Wnon-virtual-dtor -Woverloaded-virtual -Wpointer-arith -Wsign-promo -Wstack-usage=8192	\
 				-Wstrict-aliasing -Wstrict-null-sentinel -Wtype-limits -Wwrite-strings -Werror=vla		\
@@ -9,7 +9,7 @@ DEDFLAGS	:=	-Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-
 				-Wswitch-enum -Wswitch-default -Weffc++ -Wmain -Wextra -Wall -g -pipe					\
 				-Winline -Wunreachable-code -Wmissing-include-dirs
 
-CXXFLAGS	=	-mavx -mavx2 -O3 -fsave-optimization-record
+CXXFLAGS	=	-mavx -mavx2 -Ofast
 
 GCC_FLAGS			:=
 GCC_DEBUG_FLAGS		:= -fsanitize=address -g3
