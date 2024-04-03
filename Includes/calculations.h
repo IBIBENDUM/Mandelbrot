@@ -16,7 +16,8 @@ enum Mandelbrot_calculation_method
 
 #include "mandelbrot_config.h"
 
-error_code calc_mandelbrot_primitive(const Mandelbrot*);
+error_code calc_mandelbrot_primitive_float(const Mandelbrot*);
+error_code calc_mandelbrot_primitive_double(const Mandelbrot*);
 
 error_code calc_mandelbrot_AVX2(const Mandelbrot*);
 
@@ -25,14 +26,15 @@ error_code calc_mandelbrot_AVX2_with_overloaded_operators(const Mandelbrot*);
 error_code calc_mandelbrot_vectorized(const Mandelbrot*);
 
 const Mandelbrot_calculation_function CALCULATION_FUNCTIONS[] = {
-    calc_mandelbrot_primitive,
+    calc_mandelbrot_primitive_float,
+    calc_mandelbrot_primitive_double,
     calc_mandelbrot_vectorized,
     calc_mandelbrot_AVX2,
     calc_mandelbrot_AVX2_with_overloaded_operators,
 };
 
 const int CALCULATION_FUNCTIONS_AMOUNT = sizeof(CALCULATION_FUNCTIONS) / sizeof(Mandelbrot_calculation_function);
-const char* const METHODS_NAMES[CALCULATION_FUNCTIONS_AMOUNT] = { "Simple", "Vectorized", "AVX2", "AVX2 with overloaded operators" };
+const char* const METHODS_NAMES[CALCULATION_FUNCTIONS_AMOUNT] = { "Simple", "Simple double precision", "Vectorized", "AVX2", "AVX2 with overloaded operators" };
 
 #endif // CALCULATIONS_H_
 

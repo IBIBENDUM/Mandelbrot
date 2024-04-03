@@ -20,56 +20,59 @@ void __attribute__((constructor)) INITIALIZE_MAX_RADIUS_2_VECT()
 
 // = Primitive implementation ==================================================
 
-static size_t calc_mandelbrot_point_primitive(const float x0, const float y0)
-{
-    float x = x0;
-    float y = y0;
+#define PRIMITIVE_IMPLEMENATION(PRECISION)                                                        \
+static size_t calc_mandelbrot_point_primitive_##PRECISION(const PRECISION x0, const PRECISION y0) \
+{                                                                                                 \
+    PRECISION x = x0;                                                                             \
+    PRECISION y = y0;                                                                             \
+                                                                                                  \
+    size_t iteration = 0;                                                                         \
+                                                                                                  \
+    while (iteration < MAX_ITERATION_NUMBER)                                                      \
+    {                                                                                             \
+        const PRECISION      x2 = x  * x;                                                         \
+        const PRECISION      y2 = y  * y;                                                         \
+        const PRECISION      xy = x  * y;                                                         \
+        const PRECISION radius2 = x2 + y2;                                                        \
+                                                                                                  \
+        if (radius2 > MAX_RADIUS2)                                                                \
+            break;                                                                                \
+                                                                                                  \
+        x = x2 - y2 + x0;                                                                         \
+        y = xy + xy + y0;                                                                         \
+                                                                                                  \
+        iteration++;                                                                              \
+    }                                                                                             \
+    return iteration;                                                                             \
+}                                                                                                 \
+                                                                                                  \
+error_code calc_mandelbrot_primitive_##PRECISION(const Mandelbrot* mandelbrot)                    \
+{                                                                                                 \
+    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);                                                     \
+                                                                                                  \
+    uint32_t* palette     = get_cur_palette(&mandelbrot->palette);                                \
+    Screen    screen      = mandelbrot->screen;                                                   \
+    Camera    camera      = mandelbrot->camera;                                                   \
+    uint32_t* vmem_buffer = (uint32_t*) screen.graphic.surface->pixels;                           \
+                                                                                                  \
+    for (int iy = 0; iy < screen.height; iy++)                                                    \
+    {                                                                                             \
+        const PRECISION y0 = (iy - screen.height / 2.0 + camera.pos_y) / camera.zoom;             \
+        for (int ix = 0; ix < screen.width; ix++)                                                 \
+        {                                                                                         \
+            const PRECISION x0 = (ix - screen.width / 2.0 + camera.pos_x) / camera.zoom;          \
+                                                                                                  \
+            size_t iteration = calc_mandelbrot_point_primitive_##PRECISION(x0, y0);               \
+                                                                                                  \
+            *vmem_buffer = palette[iteration];                                                    \
+            vmem_buffer++;                                                                        \
+        }                                                                                         \
+    }                                                                                             \
+    return NO_ERR;                                                                                \
+}                                                                                                 \
 
-    size_t iteration = 0;
-
-    while (iteration < MAX_ITERATION_NUMBER)
-    {
-        const float      x2 = x  * x;
-        const float      y2 = y  * y;
-        const float      xy = x  * y;
-        const float radius2 = x2 + y2;
-
-        if (radius2 > MAX_RADIUS2)
-            break;
-
-        x = x2 - y2 + x0;
-        y = xy + xy + y0;
-
-        iteration++;
-    }
-    return iteration;
-}
-
-error_code calc_mandelbrot_primitive(const Mandelbrot* mandelbrot)
-{
-    RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
-
-    uint32_t* palette     = get_cur_palette(&mandelbrot->palette);
-    Screen    screen      = mandelbrot->screen;
-    Camera    camera      = mandelbrot->camera;
-    uint32_t* vmem_buffer = (uint32_t*) screen.graphic.surface->pixels;
-
-    for (int iy = 0; iy < screen.height; iy++)
-    {
-        const float y0 = (iy - screen.height / 2.0f + camera.pos_y) / camera.zoom;
-        for (int ix = 0; ix < screen.width; ix++)
-        {
-            const float x0 = (ix - screen.width / 2.0f + camera.pos_x) / camera.zoom;
-
-            size_t iteration = calc_mandelbrot_point_primitive(x0, y0);
-
-            *vmem_buffer = palette[iteration];
-            vmem_buffer++;
-        }
-    }
-    return NO_ERR;
-}
-
+PRIMITIVE_IMPLEMENATION(float)
+PRIMITIVE_IMPLEMENATION(double)
 //= AVX2 with overloaded operators implementation ==============================
 
 union mmxi_t;
@@ -153,8 +156,8 @@ error_code calc_mandelbrot_AVX2_with_overloaded_operators(const Mandelbrot* mand
     Screen       screen      = mandelbrot->screen;
     Camera       camera      = mandelbrot->camera;
     mmxi_t*      vmem_buffer = (mmxi_t*) screen.graphic.surface->pixels;
-    const float  coord_x     = camera.pos_x - screen.width  / 2.0f;
-    const float  coord_y     = camera.pos_y - screen.height / 2.0f;
+    const float  coord_x     = camera.pos_x - screen.width  / 2.0;
+    const float  coord_y     = camera.pos_y - screen.height / 2.0;
     const mmxf_t dx          = DX_FACTOR / (float) camera.zoom;     // BAH: why can't it convert double to mmxf_t?
 
     for (int iy = 0; iy < screen.height; iy++)
@@ -211,8 +214,8 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
     Screen       screen      = mandelbrot->screen;
     Camera       camera      = mandelbrot->camera;
     __m256i*     vmem_buffer = (__m256i*) screen.graphic.surface->pixels;
-    const float  coord_x     = camera.pos_x - screen.width  / 2.0f;
-    const float  coord_y     = camera.pos_y - screen.height / 2.0f;
+    const float  coord_x     = camera.pos_x - screen.width  / 2.0;
+    const float  coord_y     = camera.pos_y - screen.height / 2.0;
     const __m256 dx          = _mm256_mul_ps(_mm256_set1_ps(1 / camera.zoom), DX_FACTOR);
 
     for (int iy = 0; iy < screen.height; iy++)
@@ -250,8 +253,8 @@ error_code calc_mandelbrot_vectorized(const Mandelbrot* mandelbrot)
     Screen      screen      = mandelbrot->screen;
     Camera      camera      = mandelbrot->camera;
     uint32_t*   vmem_buffer = (uint32_t*) screen.graphic.surface->pixels;
-    const float coord_x     = camera.pos_x - screen.width  / 2.0f;
-    const float coord_y     = camera.pos_y - screen.height / 2.0f;
+    const float coord_x     = camera.pos_x - screen.width  / 2.0;
+    const float coord_y     = camera.pos_y - screen.height / 2.0;
 
     for (int iy = 0; iy < screen.height; iy++)
     {
