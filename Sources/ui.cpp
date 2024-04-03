@@ -7,7 +7,8 @@
 #include "benchmark.h"
 
 const size_t DEBUG_BUF_SIZE = 100;
-
+const size_t UI_SIZE_FACTOR = 300;
+const size_t UI_POS_FACTOR  = 1000;
 static error_code store_text_background(Mandelbrot* mandelbrot, SDL_Surface* surface, int x, int y)
 {
     RETURN_IF_NULL(mandelbrot && surface, NULL_PTR_ERR);
@@ -96,15 +97,17 @@ error_code draw_debug_text(Mandelbrot* mandelbrot)
     RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
     SDL_Renderer* renderer = mandelbrot->screen.graphic.renderer;
-    TTF_Font*     font = mandelbrot->screen.graphic.font;
+    TTF_Font*     font     = mandelbrot->screen.graphic.font;
+
     Mandelbrot_calculation_method id = mandelbrot->method.id;
-    int x        = mandelbrot->camera.pos_x;
-    int y        = mandelbrot->camera.pos_y;
+    int    x     = mandelbrot->camera.pos_x;
+    int    y     = mandelbrot->camera.pos_y;
+    double zoom  = mandelbrot->camera.zoom;
     size_t ticks = mandelbrot->screen.ticks;
 
     char debug_text[DEBUG_BUF_SIZE] = {};
-    sprintf(debug_text, "Coordinates: %d, %d\nMethod: %s\nTicks: %zu\nFPS: %ld",
-                         x, y, METHODS_NAMES[id], ticks, CLOCKS_PER_SEC / ticks);
+    sprintf(debug_text, "Coordinates: %d, %d\n Zoom: %.2lf\nMethod: %s\nTicks: %zu\nFPS: %ld",
+                         (int) (x / zoom * UI_POS_FACTOR), (int) (y / zoom * UI_POS_FACTOR), zoom / UI_SIZE_FACTOR, METHODS_NAMES[id], ticks, CLOCKS_PER_SEC / ticks);
 
     draw_text_with_background(mandelbrot, debug_text, TEXT_BG_OFFSET, TEXT_BG_OFFSET, TEXT_WIDTH);
 
