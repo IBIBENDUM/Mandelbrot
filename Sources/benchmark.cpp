@@ -10,7 +10,7 @@ int benchmark_function(Mandelbrot* mandelbrot)
     clock_t tic_start = clock();
     for (size_t i = 0; i < FUNCTIONS_RUNS_NUMBER; i++)
     {
-        mandelbrot->calc_func(mandelbrot);
+        mandelbrot->method.calculate(mandelbrot);
     }
     clock_t tic_end = clock();
     tics_amount = tic_end - tic_start;

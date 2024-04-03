@@ -21,22 +21,27 @@ union color_t
     };
 };
 
-enum Palette
+enum Palette_id
 {
     PALETTE_EVEN,
     PALETTE_LINEAR,
     PALETTE_ANIMATED,
 };
-const int PALETTES_AMOUNT = sizeof(Palette);
+const int PALETTES_AMOUNT = sizeof(Palette_id);
 
 #include "mandelbrot_config.h"
 const int COLORS_NUMBER = MAX_ITERATION_NUMBER + 1;  // Plus one colour for points outside the radius
 
+struct Palette
+{
+    Palette_id id;
+    uint32_t start[COLORS_NUMBER * sizeof(color_t)];
+};
+
 void update_animated_palette(Mandelbrot*);
 
-uint32_t* get_cur_palette(uint32_t* palettes, Palette cur_palette);
+uint32_t* get_cur_palette(const Palette*);
 
-// Needs free
-uint32_t* get_palettes();
+void get_palettes(Palette*);
 
 #endif // PALETTES_H_

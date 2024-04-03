@@ -1,3 +1,5 @@
+#include <immintrin.h>
+
 #include "calculations.h"
 #include "mandelbrot.h"
 #include "mandelbrot_config.h"
@@ -6,6 +8,9 @@
 const int PARALLEL_PIXELS_NUMBER = 8; // Number of pixels processed in parallel
 
 float MAX_RADIUS_2_VECT[PARALLEL_PIXELS_NUMBER] = {};
+
+const __m256 MAX_RADIUS_2_256 = _mm256_set1_ps(MAX_RADIUS2);
+const __m256 DX_FACTOR        = _mm256_set_ps(7.0,  6.0,  5.0,  4.0, 3.0,  2.0,  1.0,  0.0);
 
 void __attribute__((constructor)) INITIALIZE_MAX_RADIUS_2_VECT()
 {
@@ -44,16 +49,17 @@ error_code calc_mandelbrot_primitive(const Mandelbrot* mandelbrot)
 {
     RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
-    uint32_t* palette     = get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
+    uint32_t* palette     = get_cur_palette(&mandelbrot->palette);
     Screen    screen      = mandelbrot->screen;
+    Camera    camera      = mandelbrot->camera;
     uint32_t* vmem_buffer = (uint32_t*) screen.graphic.surface->pixels;
 
     for (int iy = 0; iy < screen.height; iy++)
     {
-        const float y0 = (iy - screen.height / 2.0f + screen.pos_y) / screen.zoom;
+        const float y0 = (iy - screen.height / 2.0f + camera.pos_y) / camera.zoom;
         for (int ix = 0; ix < screen.width; ix++)
         {
-            const float x0 = (ix - screen.width / 2.0f + screen.pos_x) / screen.zoom;
+            const float x0 = (ix - screen.width / 2.0f + camera.pos_x) / camera.zoom;
 
             size_t iteration = calc_mandelbrot_point_primitive(x0, y0);
 
@@ -64,7 +70,7 @@ error_code calc_mandelbrot_primitive(const Mandelbrot* mandelbrot)
     return NO_ERR;
 }
 
-// // = AVX2 with overloaded operators implementation =============================
+//= AVX2 with overloaded operators implementation ==============================
 
 union mmxi_t;
 
@@ -106,7 +112,7 @@ inline bool   operator ! (const mmxf_t& a)                  { return _mm256_test
 inline mmxi_t operator -= (mmxi_t& a, const mmxi_t& b) { a = _mm256_sub_epi32(a, b); return a; }
 inline mmxi_t gather_array(const void* src, const mmxi_t& dest)
 {
-  return _mm256_i32gather_epi32(src, dest, sizeof(uint32_t));
+  return _mm256_i32gather_epi32((const int*) src, dest, sizeof(uint32_t));
 }
 inline void store_array(const mmxi_t& src, void* dest)
 {
@@ -139,24 +145,25 @@ static mmxi_t calc_mandelbrot_point_AVX2_overload_ops(const mmxf_t x0, const mmx
     return iterations;
 }
 
-error_code calc_mandelbrot_AVX2_overload_ops(const Mandelbrot* mandelbrot)
+error_code calc_mandelbrot_AVX2_with_overloaded_operators(const Mandelbrot* mandelbrot)
 {
     RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
-    uint32_t*    palette     = get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
+    uint32_t*    palette     = get_cur_palette(&mandelbrot->palette);
     Screen       screen      = mandelbrot->screen;
+    Camera       camera      = mandelbrot->camera;
     mmxi_t*      vmem_buffer = (mmxi_t*) screen.graphic.surface->pixels;
-    const float  coord_x     = screen.pos_x - screen.width  / 2.0f;
-    const float  coord_y     = screen.pos_y - screen.height / 2.0f;
-    const mmxf_t dx          = DX_FACTOR / (float) screen.zoom;     // BAH: why can't it convert double to mmxf_t?
+    const float  coord_x     = camera.pos_x - screen.width  / 2.0f;
+    const float  coord_y     = camera.pos_y - screen.height / 2.0f;
+    const mmxf_t dx          = DX_FACTOR / (float) camera.zoom;     // BAH: why can't it convert double to mmxf_t?
 
     for (int iy = 0; iy < screen.height; iy++)
     {
-        mmxf_t y0 = (iy + coord_y) / screen.zoom;
+        mmxf_t y0 = (iy + coord_y) / camera.zoom;
 
         for (int ix = 0; ix < screen.width; ix += PARALLEL_PIXELS_NUMBER)
         {
-            mmxf_t x0 = ((ix + coord_x) / screen.zoom) + dx;
+            mmxf_t x0 = ((ix + coord_x) / camera.zoom) + dx;
             mmxi_t iterations = calc_mandelbrot_point_AVX2_overload_ops(x0, y0);
 
             mmxi_t colors = gather_array(palette, iterations);
@@ -200,20 +207,21 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
 {
     RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
-    uint32_t*    palette     = get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
+    uint32_t*    palette     = get_cur_palette(&mandelbrot->palette);
     Screen       screen      = mandelbrot->screen;
+    Camera       camera      = mandelbrot->camera;
     __m256i*     vmem_buffer = (__m256i*) screen.graphic.surface->pixels;
-    const float  coord_x     = screen.pos_x - screen.width  / 2.0f;
-    const float  coord_y     = screen.pos_y - screen.height / 2.0f;
-    const __m256 dx          = _mm256_mul_ps(_mm256_set1_ps(1 / DEFAULT_ZOOM), DX_FACTOR);
+    const float  coord_x     = camera.pos_x - screen.width  / 2.0f;
+    const float  coord_y     = camera.pos_y - screen.height / 2.0f;
+    const __m256 dx          = _mm256_mul_ps(_mm256_set1_ps(1 / camera.zoom), DX_FACTOR);
 
     for (int iy = 0; iy < screen.height; iy++)
     {
-        const __m256 y0 = _mm256_set1_ps(((float)iy + coord_y) / screen.zoom);
+        const __m256 y0 = _mm256_set1_ps((iy + coord_y) / camera.zoom);
 
         for (int ix = 0; ix < screen.width; ix += PARALLEL_PIXELS_NUMBER)
         {
-            __m256 x0 = _mm256_set1_ps(((float)ix + coord_x) / screen.zoom);
+            __m256 x0 = _mm256_set1_ps((ix + coord_x) / camera.zoom);
             x0 = _mm256_add_ps(x0, dx);
 
             __m256i iterations = calc_mandelbrot_point_AVX2(x0, y0);
@@ -236,21 +244,22 @@ error_code calc_mandelbrot_AVX2(const Mandelbrot* mandelbrot)
     float NAME[PARALLEL_PIXELS_NUMBER] = {};            \
     PARALLEL_INSTRUCTION_ NAME[i] = __VA_ARGS__;
 
-error_code calc_mandelbrot_vector(const Mandelbrot* mandelbrot)
+error_code calc_mandelbrot_vectorized(const Mandelbrot* mandelbrot)
 {
-    uint32_t*   palette     = get_cur_palette(mandelbrot->palettes, mandelbrot->cur_palette);
+    uint32_t*   palette     = get_cur_palette(&mandelbrot->palette);
     Screen      screen      = mandelbrot->screen;
+    Camera      camera      = mandelbrot->camera;
     uint32_t*   vmem_buffer = (uint32_t*) screen.graphic.surface->pixels;
-    const float coord_x     = screen.pos_x - screen.width  / 2.0f;
-    const float coord_y     = screen.pos_y - screen.height / 2.0f;
+    const float coord_x     = camera.pos_x - screen.width  / 2.0f;
+    const float coord_y     = camera.pos_y - screen.height / 2.0f;
 
     for (int iy = 0; iy < screen.height; iy++)
     {
-        INIT_VECTOR(y0, (iy + coord_y) / screen.zoom);
+        INIT_VECTOR(y0, (iy + coord_y) / camera.zoom);
 
         for (int ix = 0; ix < screen.width; ix += PARALLEL_PIXELS_NUMBER)
         {
-            INIT_VECTOR(x0, (ix + coord_x + i) / screen.zoom);
+            INIT_VECTOR(x0, (ix + coord_x + i) / camera.zoom);
             INIT_VECTOR(x, x0[i]);
             INIT_VECTOR(y, y0[i]);
 

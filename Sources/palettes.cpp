@@ -39,7 +39,7 @@ void update_animated_palette(Mandelbrot* mandelbrot)
     for (int i = 0; i < COLORS_NUMBER; i++)
     {
         int ratio = ((i + (int) offset) % 10);
-        *(mandelbrot->palettes + PALETTE_ANIMATED * COLORS_NUMBER + i) =
+        *(mandelbrot->palette.start + PALETTE_ANIMATED * COLORS_NUMBER + i) =
         (char) (start.a * (1 - ratio) + (end.a * ratio)) << ALPHA |
         (char) (start.r * (1 - ratio) + (end.r * ratio)) << RED   |
         (char) (start.g * (1 - ratio) + (end.g * ratio)) << GREEN |
@@ -47,16 +47,13 @@ void update_animated_palette(Mandelbrot* mandelbrot)
     }
 }
 
-uint32_t* get_palettes()
+void get_palettes(Palette* palettes)
 {
-    uint32_t* palettes = (uint32_t*) calloc(PALETTES_AMOUNT * COLORS_NUMBER, sizeof(palettes[0]));
-    generate_even_palette(palettes);
-    generate_linear_palette(palettes);
-
-    return palettes;
+    generate_even_palette(palettes->start);
+    generate_linear_palette(palettes->start);
 }
 
-uint32_t* get_cur_palette(uint32_t* palettes, Palette cur_palette)
+uint32_t* get_cur_palette(const Palette* palette)
 {
-    return (palettes + cur_palette * COLORS_NUMBER);
+    return ((uint32_t*)palette->start + palette->id * COLORS_NUMBER);
 }

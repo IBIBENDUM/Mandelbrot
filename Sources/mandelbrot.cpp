@@ -51,26 +51,31 @@ error_code init_mandelbrot(Mandelbrot* mandelbrot)
     Graphic graphic = {};
     RETURN_IF_NULL(!init_graphic(&graphic), SDL_ERR);
 
-    Screen screen =
-    {
+    Screen screen = {
         .graphic = graphic,
         .height  = graphic.surface->h,
         .width   = graphic.surface->w,
+    };
+
+    Camera camera = {
         .pos_x   = 0,
         .pos_y   = 0,
         .zoom    = DEFAULT_ZOOM
     };
 
-    uint32_t* palettes = get_palettes();
+    Palette palettes = { .id = DEFAULT_PALETTE };
+    get_palettes(&palettes);
 
-    *mandelbrot = {
-        .is_running  = true,
-        .show_debug  = true,
-        .cur_calc    = DEFAULT_CALC_FUNC,
-        .calc_func   = CALC_FUNCS[DEFAULT_CALC_FUNC],
-        .screen      = screen,
-        .cur_palette = DEFAULT_PALETTE,
-        .palettes    = palettes,
+    *mandelbrot = (Mandelbrot) {
+        .is_running    = true,
+        .show_debug    = true,
+        .method = {
+            .id        = DEFAULT_CALC_FUNC,
+            .calculate = CALCULATION_FUNCTIONS[DEFAULT_CALC_FUNC]
+        },
+        .screen        = screen,
+        .camera        = camera,
+        .palette       = palettes
     };
 
     return NO_ERR;
@@ -79,8 +84,6 @@ error_code init_mandelbrot(Mandelbrot* mandelbrot)
 error_code destruct_mandelbrot(Mandelbrot* mandelbrot)
 {
     RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
-
-    free(mandelbrot->palettes);
 
     TTF_CloseFont(mandelbrot->screen.graphic.font);
     SDL_FreeSurface(mandelbrot->screen.graphic.surface);
@@ -104,7 +107,7 @@ static error_code draw_mandelbrot(Mandelbrot* mandelbrot)
 
     clock_t tic_start = clock();
 
-    mandelbrot->calc_func(mandelbrot);
+    mandelbrot->method.calculate(mandelbrot);
 
     clock_t tic_end = clock();
     mandelbrot->screen.ticks = tic_end - tic_start;
@@ -132,7 +135,7 @@ error_code process_mandelbrot(Mandelbrot* mandelbrot)
     if (mandelbrot->show_debug)
         draw_debug_text(mandelbrot);
 
-    if (mandelbrot->cur_palette == PALETTE_ANIMATED)
+    if (mandelbrot->palette.id == PALETTE_ANIMATED)
     {
         update_animated_palette(mandelbrot);
     }

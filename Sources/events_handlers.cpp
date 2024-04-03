@@ -12,10 +12,9 @@ static error_code update_zoom(Mandelbrot* mandelbrot, int x, int y, float zoom)
 {
     RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
-    mandelbrot->screen.pos_x = x;
-    mandelbrot->screen.pos_y = y;
-    mandelbrot->screen.zoom  = zoom;
-    mandelbrot->dx           = _mm256_mul_ps(_mm256_set1_ps(1 / zoom), DX_FACTOR);
+    mandelbrot->camera.pos_x = x;
+    mandelbrot->camera.pos_y = y;
+    mandelbrot->camera.zoom  = zoom;
 
     return NO_ERR;
 }
@@ -62,8 +61,8 @@ static error_code change_method_handle(Mandelbrot* mandelbrot)
 {
     RETURN_IF_NULL(mandelbrot, NULL_PTR_ERR);
 
-    mandelbrot->cur_calc  = (Calc_implement) ((mandelbrot->cur_calc + 1) % CALC_FUNCS_AMOUNT);
-    mandelbrot->calc_func = CALC_FUNCS[mandelbrot->cur_calc];
+    mandelbrot->method.id  = (Mandelbrot_calculation_method) ((mandelbrot->method.id + 1) % CALCULATION_FUNCTIONS_AMOUNT);
+    mandelbrot->method.calculate = CALCULATION_FUNCTIONS[mandelbrot->method.id];
 
     return NO_ERR;
 }
@@ -75,14 +74,14 @@ static error_code keyboard_handler(SDL_Event* event, Mandelbrot* mandelbrot)
     switch(event->key.keysym.sym)
     {
         case SDLK_b:      benchmark_handle(mandelbrot); break;
-        case SDLK_w:      mandelbrot->screen.pos_y -= KBRD_COORD_STEP;         break;
-        case SDLK_a:      mandelbrot->screen.pos_x -= KBRD_COORD_STEP;         break;
-        case SDLK_s:      mandelbrot->screen.pos_y += KBRD_COORD_STEP;         break;
-        case SDLK_d:      mandelbrot->screen.pos_x += KBRD_COORD_STEP;         break;
+        case SDLK_w:      mandelbrot->camera.pos_y -= KBRD_COORD_STEP;         break;
+        case SDLK_a:      mandelbrot->camera.pos_x -= KBRD_COORD_STEP;         break;
+        case SDLK_s:      mandelbrot->camera.pos_y += KBRD_COORD_STEP;         break;
+        case SDLK_d:      mandelbrot->camera.pos_x += KBRD_COORD_STEP;         break;
         case SDLK_l:      mandelbrot->show_debug    = !mandelbrot->show_debug; break;
-        case SDLK_1:      mandelbrot->cur_palette   = PALETTE_EVEN;            break;
-        case SDLK_2:      mandelbrot->cur_palette   = PALETTE_LINEAR;          break;
-        case SDLK_3:      mandelbrot->cur_palette   = PALETTE_ANIMATED;        break;
+        case SDLK_1:      mandelbrot->palette.id   = PALETTE_EVEN;            break;
+        case SDLK_2:      mandelbrot->palette.id   = PALETTE_LINEAR;          break;
+        case SDLK_3:      mandelbrot->palette.id   = PALETTE_ANIMATED;        break;
         case SDLK_ESCAPE: mandelbrot->is_running    = false;                   break;
         case SDLK_RETURN: change_method_handle(mandelbrot);                    break;
         default:                                                               break;
@@ -96,6 +95,7 @@ static error_code scroll_handler(SDL_Event* event, Mandelbrot* mandelbrot)
     RETURN_IF_NULL(event && mandelbrot, NULL_PTR_ERR);
 
     Screen screen = mandelbrot->screen;
+    Camera camera = mandelbrot->camera;
 
     float zoom_factor = 1;
     if(event->wheel.y > 0)
@@ -110,23 +110,23 @@ static error_code scroll_handler(SDL_Event* event, Mandelbrot* mandelbrot)
     const float center_x = screen.width  / 2;
     const float center_y = screen.height / 2;
 
-    const float mouse_rel_x = screen.pos_x + mouse_x - center_x;
-    const float mouse_rel_y = screen.pos_y + mouse_y - center_y;
+    const float mouse_rel_x = camera.pos_x + mouse_x - center_x;
+    const float mouse_rel_y = camera.pos_y + mouse_y - center_y;
 
-    const float new_zoom = screen.zoom  * zoom_factor;
-    const int   new_x    = screen.pos_x + mouse_rel_x * (zoom_factor - 1);
-    const int   new_y    = screen.pos_y + mouse_rel_y * (zoom_factor - 1);
+    const float new_zoom = camera.zoom  * zoom_factor;
+    const int   new_x    = camera.pos_x + mouse_rel_x * (zoom_factor - 1);
+    const int   new_y    = camera.pos_y + mouse_rel_y * (zoom_factor - 1);
     update_zoom(mandelbrot, new_x, new_y, new_zoom);
 
     return NO_ERR;
 }
 
-static error_code movement_handler(SDL_Event* event, Screen* screen)
+static error_code movement_handler(SDL_Event* event, Camera* camera)
 {
-    RETURN_IF_NULL(event && screen, NULL_PTR_ERR);
+    RETURN_IF_NULL(event && camera, NULL_PTR_ERR);
 
-    screen->pos_x -= event->motion.xrel;
-    screen->pos_y -= event->motion.yrel;
+    camera->pos_x -= event->motion.xrel;
+    camera->pos_y -= event->motion.yrel;
 
     return NO_ERR;
 }
@@ -170,7 +170,7 @@ error_code handle_events(Mandelbrot* mandelbrot)
             }
             case SDL_MOUSEMOTION: {
                 if (event.motion.state & SDL_BUTTON_LMASK)
-                    movement_handler(&event, &mandelbrot->screen);
+                    movement_handler(&event, &mandelbrot->camera);
                 break;
             }
             case SDL_KEYDOWN: {

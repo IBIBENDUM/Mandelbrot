@@ -20,7 +20,7 @@ struct Graphic
 struct Camera
 {
     int    pos_x;
-    int    pox_y;
+    int    pos_y;
     double zoom;
 };
 
@@ -31,39 +31,25 @@ struct Screen
     int       height;
     int       width;
 
-    // -------------
-    int       pos_x; // TODO: OF SCREEN??
-    int       pos_y;
-
-    double    zoom;
-    // ------------- TODO: this are two different entities
-
-    size_t ticks; // TODO: frames?
-};
-
-struct Method
-{
-
+    size_t    ticks;
 };
 
 struct Mandelbrot
 {
     bool      is_running;
     bool      show_debug;
-    bool      show_help;
 
-    // TODO: separate in a struct
-    Calc_implement      cur_calc; // TODO: cur? cur cur /current_calculation_method/ ? (naming)
-    calc_implement_func calc_func; // TODO: /calculate/ mandelbrot->calculate(&mandelbrot);
-                                   //       or even better mandelbrot->method.calculate(&mandelbrot) and
-                                   //                      mandelbrot->method.id
+    struct Method
+    {
+        Mandelbrot_calculation_method   id;
+        Mandelbrot_calculation_function calculate;
+    } method;
 
     Screen  screen;
 
-    Palette   cur_palette; // TODO: cur_
-    uint32_t* palettes;
+    Camera  camera;
 
-    __m256    dx; // TODO: What is this, as far as I know not all your backends use avx instructions so no reason for it here
+    Palette palette;
 };
 
 error_code init_mandelbrot(Mandelbrot*);
