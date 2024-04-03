@@ -6,8 +6,8 @@ This project lets you interactively explore the mesmerizing **Mandelbrot set**, 
 The project was tested on AMD Ryzen 7 5700U on Linux Mint 21.3
 
 ## Features
-- 4 types of Mandelbrot set calculation methods: **primitive**, using **SIMD** instructions, using **Vectorising without SIMD**, using C++ **operators overload**
-- 2 palette types: parity-based and linear gradient
+- 4 types of Mandelbrot set calculation methods: **primitive**, **primitive double precision**, using **SIMD** instructions, using **Vectors without SIMD**, using C++ **operators overload**
+- 3 palette types: parity-based, linear gradient and animated
 - Benchmark current calculation method
 ## Control
 ### Mouse
