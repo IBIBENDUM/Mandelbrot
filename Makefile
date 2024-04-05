@@ -9,7 +9,7 @@ DEDFLAGS	:=	-Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-
 				-Wswitch-enum -Wswitch-default -Weffc++ -Wmain -Wextra -Wall -g -pipe					\
 				-Winline -Wunreachable-code -Wmissing-include-dirs
 
-CXXFLAGS	=	-mavx -mavx2 -Ofast
+CXXFLAGS	=	-mavx -mavx2 -O3
 
 GCC_FLAGS			:=
 GCC_DEBUG_FLAGS		:= -fsanitize=address -g3
@@ -27,7 +27,7 @@ DEPFLAGS	 = -MMD -MP -MF $(OUT_NAME)
 LDIBS		:= -lSDL2 -lSDL2_ttf
 
 SRC_DIR	:= Sources
-INC_DIR	:= -I Includes/
+INC_DIR	:= Includes
 
 OBJ_DIR		:= objects
 DEP_DIR		:= headers
@@ -54,7 +54,7 @@ $(EXEC): $(OBJECTS)
 $(OBJ_DIR)/%.o : BASENAME = $(basename $(notdir $@))
 				 OUT_NAME = $(DEP_DIR)/$(BASENAME).d
 $(OBJECTS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp | $(TMP_DIRS)
-			@if $(CXX) $(CXXFLAGS) $(INC_DIR) -c $< -o $@ $(DEPFLAGS); then		\
+			@if $(CXX) $(CXXFLAGS) -I  $(INC_DIR) -c $< -o $@ $(DEPFLAGS); then	\
 				printf "Compiled $(BOLD_GREEN)"$<"$(CLR_END) successfully!\n";	\
 			else																\
 				printf "Compile $(CLR_RED)"$<"$(CLR_END) error!\n";				\

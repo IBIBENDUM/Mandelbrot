@@ -56,7 +56,7 @@ cd Mandelbrot
 make build
 ```
 
-(Optional) Before running the programme, look at the [report on this project](Report/Mandelbrot.pdf)
+(Optional) Before running the program, look at the [report on this project](Report/Mandelbrot.pdf)
 
 Now to run program execute `make run`.
 

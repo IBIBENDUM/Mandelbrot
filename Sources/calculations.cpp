@@ -73,6 +73,7 @@ error_code calc_mandelbrot_primitive_##PRECISION(const Mandelbrot* mandelbrot)  
 
 PRIMITIVE_IMPLEMENATION(float)
 PRIMITIVE_IMPLEMENATION(double)
+
 //= AVX2 with overloaded operators implementation ==============================
 
 union mmxi_t;
